@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Wasalnyy.DAL\Wasalnyy.DAL.csproj" />
+    <ProjectReference Include="..\Wasalnyy.BLL\Wasalnyy.BLL.csproj" />
   </ItemGroup>
 
 </Project>

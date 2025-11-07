@@ -19,7 +19,8 @@ namespace Wasalnyy.PL
             builder.Services.AddControllers();
             builder.Services.AddSignalR();
 
-            var connectionString = builder.Configuration.GetConnectionString("TemplateConnection");
+			builder.Services.AddDbContext<WasalnyyDbContext>(options =>
+	            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             builder.Services.AddDbContext<WasalnyyDbContext>(options =>
             options.UseSqlServer(connectionString));
@@ -38,8 +39,8 @@ namespace Wasalnyy.PL
                             .AddEntityFrameworkStores<WasalnyyDbContext>()
                             .AddTokenProvider<DataProtectorTokenProvider<Riders>>(TokenOptions.DefaultProvider);
 
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
+			// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+			builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
