@@ -1,9 +1,45 @@
+# Visual Studio user-specific files
 .vs/
-bin/
-obj/
-Wasalnyy.BLL/obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build output
 Wasalnyy.BLL/bin/
-Wasalnyy.DAL/obj/
+Wasalnyy.BLL/obj/
 Wasalnyy.DAL/bin/
+Wasalnyy.DAL/obj/
 Wasalnyy.PL/bin/
 Wasalnyy.PL/obj/
+
+# General bin/obj
+**/bin/
+**/obj/
+**/Debug/
+**/Release/
+
+# NuGet packages
+*.nupkg
+packages/
+*.snupkg
+
+# Logs and temp files
+*.log
+*.tlog
+*.tmp
+
+# Rider / VS Code
+.idea/
+.vscode/
+
+# Publish output
+publish/
+*.pubxml
+*.Publish.xml
+
+# Misc
+*.dbmdl
+*.bak
+*.Cache/
+*.config.user
