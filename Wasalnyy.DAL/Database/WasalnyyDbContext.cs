@@ -20,6 +20,7 @@ namespace Wasalnyy.DAL.Database
         public DbSet<Driver> Drivers {  get; set; }
         public DbSet<Vehicle> Vehicles {  get; set; }
         public DbSet<Review> Reviews {  get; set; }
+        public DbSet<Zone> Zones {  get; set; }
 
 
     }
