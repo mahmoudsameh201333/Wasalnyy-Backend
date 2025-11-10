@@ -1,12 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Wasalnyy.DAL.Enum;
-
-namespace Wasalnyy.DAL.Entities
+﻿namespace Wasalnyy.DAL.Entities
 {
 	public class User : IdentityUser
 	{
@@ -19,11 +11,23 @@ namespace Wasalnyy.DAL.Entities
 				age--;
 			return age;
 		}
-		public string Image { get; set; }
+		public string? Image { get; set; }
 		public string PhoneNumber { get; set; }
 		public Gender Gender { get; set; }
 		public DateTime CreatedAt { get; set; }
 		public bool IsDeleted { get; protected set; } = false;
 
+		public User()
+		{
+			
+		}
+		public User(string fullName, DateTime dateOfBirth,string phoneNumber, Gender gender)
+		{
+			FullName = fullName;
+			DateOfBirth = dateOfBirth;
+			PhoneNumber = phoneNumber;
+			Gender = gender;
+			CreatedAt = DateTime.Now;
+		}
 	}
 }

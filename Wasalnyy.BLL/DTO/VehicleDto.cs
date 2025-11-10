@@ -1,8 +1,7 @@
-﻿namespace Wasalnyy.DAL.Entities
+﻿namespace Wasalnyy.BLL.DTO
 {
-	public class Vehicle
+	public class VehicleDto
 	{
-		[Key]
 		public string PlateNumber { get; set; }
 		public string Model { get; set; }
 		public string Color { get; set; }
@@ -12,9 +11,5 @@
 		public Capacity Capacity { get; set; }
 		public Transmission Transmission { get; set; }
 		public EngineType EngineType { get; set; }
-
-		public string DriverId { get; set; }
-		public Driver Driver { get; set; }
-
 	}
 }

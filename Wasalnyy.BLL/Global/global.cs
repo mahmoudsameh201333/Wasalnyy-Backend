@@ -3,4 +3,17 @@ global using System.Collections.Generic;
 global using System.Linq;
 global using System.Text;
 global using System.Threading.Tasks;
-
+global using Wasalnyy.DAL.Enum;
+global using Wasalnyy.BLL.Service.Abstraction;
+global using Wasalnyy.BLL.DTO.Account;
+global using Wasalnyy.BLL.Response;
+global using Microsoft.Extensions.Options;
+global using Microsoft.IdentityModel.Tokens;
+global using System.IdentityModel.Tokens.Jwt;
+global using System.Security.Claims;
+global using Wasalnyy.DAL.Entities;
+global using Microsoft.AspNetCore.Authentication.JwtBearer;
+global using Microsoft.Extensions.Configuration;
+global using Microsoft.Extensions.DependencyInjection;
+global using Wasalnyy.BLL.JwtHandling;
+global using Wasalnyy.BLL.Service.Implementation;

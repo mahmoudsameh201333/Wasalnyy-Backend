@@ -1,13 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Wasalnyy.DAL.Entities;
-
-namespace MVCTask.DAL.Configrations
+﻿namespace Wasalnyy.DAL.Configuration
 {
     public class TripConfig : IEntityTypeConfiguration<Trip>
     {
         public void Configure(EntityTypeBuilder<Trip> builder)
         {
-            builder.HasKey(t => t.Id);;
+            builder.HasKey(t => t.Id); 
 
             builder.Property(t => t.Distination)
                 .IsRequired()

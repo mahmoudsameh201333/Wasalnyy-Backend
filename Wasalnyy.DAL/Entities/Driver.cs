@@ -1,6 +1,4 @@
-﻿using Wasalnyy.DAL.Enum;
-
-namespace Wasalnyy.DAL.Entities
+﻿namespace Wasalnyy.DAL.Entities
 {
     public class Driver : User
     {
