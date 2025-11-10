@@ -45,5 +45,27 @@ namespace Wasalnyy.DAL.Repo.Implementation
         {
             return await _context.SaveChangesAsync(cancellationToken);
         }
+
+        public async Task ChangeStatusAsync(string driverId, DriverStatus status)
+        {
+            var driver = await _context.Drivers.SingleOrDefaultAsync(x => x.Id == driverId);
+
+            if (driver != null)
+            {
+                driver.DriverStatus = status;
+                _context.Entry(driver).State = EntityState.Modified;
+            }
+        }
+
+        public async Task UpdateDriverZoneAsync(string driverId, Guid zoneId)
+        {
+            var driver = await _context.Drivers.SingleOrDefaultAsync(x => x.Id == driverId);
+
+            if (driver != null)
+            {
+                driver.ZoneId = zoneId;
+                _context.Entry(driver).State = EntityState.Modified;
+            }
+        }
     }
 }

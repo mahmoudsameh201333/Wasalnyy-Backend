@@ -8,6 +8,8 @@ using Wasalnyy.DAL.Database;
 using Wasalnyy.DAL.Entities;
 using Wasalnyy.PL.Hubs;
 
+using Wasalnyy.BLL.Common;
+using Wasalnyy.DAL.Common;
 namespace Wasalnyy.PL
 {
     public class Program
@@ -39,7 +41,16 @@ namespace Wasalnyy.PL
 			builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            builder.Services.AddBussinessInPL();
+            builder.Services.AddBussinessInDAL();
+
             var app = builder.Build();
+
+            app.UseBussinessEventSubscriptions();
+
+
+            // Configure the HTTP request pipeline.
+            if (app.Environment.IsDevelopment())
 			using (var scope = app.Services.CreateScope())
 			{
 				var services = scope.ServiceProvider;

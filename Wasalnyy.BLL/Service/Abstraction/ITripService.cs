@@ -12,13 +12,6 @@ namespace Wasalnyy.BLL.Service.Abstraction
 {
     public interface ITripService
     {
-        delegate void TripDel(TripDto dto);
-        event TripDel? TripRequested;
-        event TripDel? TripAccepted;
-        event TripDel? TripStarted;
-        event TripDel? TripEnded;
-        event TripDel? TripCanceled;
-
         Task<TripDto> GetByIdAsync(Guid id);
         Task<IEnumerable<TripDto>> GetByRequestedTripsByZoneAsync(string zone);
         Task<TripPaginationDto> GetAllAsync(Expression<Func<Trip, object>> orderBy,
