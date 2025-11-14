@@ -10,6 +10,6 @@ namespace Wasalnyy.BLL.DTO.Zone
     public class UpdateZoneDto
     {
         public string Name { get; set; }
-        public IEnumerable<Coordinate> Coordinates { get; set; } = Enumerable.Empty<Coordinate>();
+        public IEnumerable<Coordinates> Coordinates { get; set; } = Enumerable.Empty<Coordinates>();
     }
 }

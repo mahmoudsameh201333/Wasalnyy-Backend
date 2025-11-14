@@ -2,7 +2,7 @@
 
 namespace Wasalnyy.PL.Hubs
 {
-    public class TripHub : Hub
+    public class WasalnyyHub : Hub
     {
         public override Task OnConnectedAsync()
         {

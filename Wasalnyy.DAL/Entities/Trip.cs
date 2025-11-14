@@ -5,22 +5,20 @@
 		public Guid Id { get; set; }
 		public PaymentMethod PaymentMethod { get; set; }
 		public TripStatus TripStatus { get; set; } = TripStatus.Requested;
-		public double Distance { get; set; }
-		public string Distination { get; set; }
-		public string PickupPoint { get; set; }
-		public decimal Price { get; set; }
+		public double DistanceKm { get; set; }
+		public double DurationMinutes { get; set; }
+		public double Price { get; set; }
 
-		[NotMapped]
-		public double Duration { get =>  ArrivalDate.Subtract( StartDate).TotalMinutes;  }
-		public DateTime ArrivalDate { get; set; }
-		public DateTime StartDate { get; set; }
-		public double StartLat { get; set; }
-		public double StartLng { get; set; }
-		public double EndLat { get; set; }
-		public double EndLng { get; set; }
+		public DateTime RequestedDate { get; set; }
+		public DateTime? StartDate { get; set; }
+        public DateTime? ArrivalDate { get; set; }
 
-		public string DriverId { get; set; }
-		public Driver Driver { get; set; }
+
+        public Coordinates PickupCoordinates { get; set; }
+        public Coordinates DistinationCoordinates { get; set; }
+
+		public string? DriverId { get; set; }
+		public Driver? Driver { get; set; }
 		public string RiderId { get; set; }
 		public Rider Rider { get; set; }
 

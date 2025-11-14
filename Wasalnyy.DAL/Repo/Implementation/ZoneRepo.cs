@@ -32,7 +32,7 @@ namespace Wasalnyy.DAL.Repo.Implementation
             }
         }
 
-        public async Task<IEnumerable<Zone>> GetCandidateZonesAsync(Coordinate coordinate)
+        public async Task<IEnumerable<Zone>> GetCandidateZonesAsync(Coordinates coordinate)
         {
             return await _context.Zones.AsNoTracking()
                 .Include(x=> x.Coordinates)

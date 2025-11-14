@@ -108,5 +108,19 @@ namespace Wasalnyy.DAL.Repo.Implementation
             return await _context.SaveChangesAsync(cancellationToken);
         }
 
+        public async Task<int> GetCountAsync()
+        {
+            return await _context.Trips.AsNoTracking().CountAsync();
+        }
+
+        public async Task<int> GetRiderTripsCountAsync(string riderId)
+        {
+            return await _context.Trips.AsNoTracking().CountAsync(x=> x.RiderId == riderId);
+        }
+
+        public async Task<int> GetDriverTripsCountAsync(string driverId)
+        {
+            return await _context.Trips.AsNoTracking().CountAsync(x => x.DriverId == driverId);
+        }
     }
 }

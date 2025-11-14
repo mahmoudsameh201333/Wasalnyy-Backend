@@ -12,26 +12,24 @@ namespace Wasalnyy.BLL.Service.Abstraction
 {
     public interface ITripService
     {
-        delegate void TripDel(TripDto dto);
-        event TripDel? TripRequested;
-        event TripDel? TripAccepted;
-        event TripDel? TripStarted;
-        event TripDel? TripEnded;
-        event TripDel? TripCanceled;
+        Task<TripDto?> GetByIdAsync(Guid id);
 
-        Task<TripDto> GetByIdAsync(Guid id);
-        Task<IEnumerable<TripDto>> GetByRequestedTripsByZoneAsync(string zone);
-        Task<TripPaginationDto> GetAllAsync(Expression<Func<Trip, object>> orderBy,
+        Task<IEnumerable<TripDto>> GetByRequestedTripsByZoneAsync(Guid zoneId);
+        Task<TripPaginationDto> GetAllPaginatedAsync(Expression<Func<Trip, object>> orderBy,
                                         bool descending = false, int pageNumber = 1, int pageSize = 10);
-        Task<TripPaginationDto> GetAllRiderTripsAsync(string riderId, Expression<Func<Trip, object>> orderBy,
+        Task<TripPaginationDto> GetAllRiderTripsPaginatedAsync(string riderId, Expression<Func<Trip, object>> orderBy,
                                         bool descending = false, int pageNumber = 1, int pageSize = 10);
 
-        Task<TripPaginationDto> GetAllDriverTripsAsync(string driverId, Expression<Func<Trip, object>> orderBy,
+        Task<TripPaginationDto> GetAllDriverTripsPaginatedAsync(string driverId, Expression<Func<Trip, object>> orderBy,
                                         bool descending = false, int pageNumber = 1, int pageSize = 10);
-        Task RequestTripAsync(string userId, RequestTripDto dto);
-        Task AcceptTripAsync(Guid driverId, Guid tripId);
-        Task EndTripAsync(Guid tripId);
-        Task CancelTripAsync(Guid tripId);
-        Task<IEnumerable<TripDto>> GetRequestedTripsByZone(Guid zoneId);
+        Task RequestTripAsync(string riderId, RequestTripDto dto);
+        Task AcceptTripAsync(string driverId, Guid tripId);
+        Task StartTripAsyncAsync(string driverId, Guid tripId);
+        Task EndTripAsync(string driverId, Guid tripId);
+
+        Task<int> GetPagesCountAsync(int pageSize = 10);
+        Task<int> GetRiderTripsPagesCountAsync(string riderId, int pageSize = 10);
+        Task<int> GetDriverTripsPagesCountAsync(string driverId, int pageSize = 10);
+
     }
 }

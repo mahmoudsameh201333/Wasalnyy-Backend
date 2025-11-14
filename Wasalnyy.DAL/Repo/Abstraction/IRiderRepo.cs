@@ -4,9 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Wasalnyy.BLL.DTO.Driver
+namespace Wasalnyy.DAL.Repo.Abstraction
 {
-    public class ReturnDriver
+    public interface IRiderRepo
     {
+        Task<Rider?> GetByIdAsync(string driverId);
+
     }
 }
