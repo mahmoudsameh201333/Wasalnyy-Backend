@@ -1,4 +1,8 @@
-﻿namespace Wasalnyy.PL.Controllers
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.WebUtilities;
+using System.Text;
+
+namespace Wasalnyy.PL.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]
@@ -43,7 +47,16 @@
 
 			return Ok(new { result.Message, result.Token });
 		}
+		[HttpGet("confirm-email")]
+		public async Task<IActionResult> ConfirmEmail([FromQuery] string userId, [FromQuery] string token)
+		{
+			var result = await _authService.ConfirmEmailAsync(userId, token);
 
+			if (!result.Success)
+				return BadRequest(result.Message);
+
+			return Ok(result.Message);
+		}
 
 	}
 }

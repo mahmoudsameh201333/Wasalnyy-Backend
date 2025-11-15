@@ -33,54 +33,59 @@ namespace Wasalnyy.PL
             builder.Services.AddControllers();
             builder.Services.AddSignalR();
 
-			builder.Services.AddDbContext<WasalnyyDbContext>(options =>
-	            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+      builder.Services.AddDbContext<WasalnyyDbContext>(options =>
+        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
-            builder.Services.Configure<PricingSettings>(builder.Configuration.GetSection("PricingSettings"));
-            builder.Services.AddScoped<PricingSettings>(sp =>
-                sp.GetRequiredService<IOptions<PricingSettings>>().Value);
+      builder.Services.Configure<PricingSettings>(builder.Configuration.GetSection("PricingSettings"));
+      builder.Services.AddScoped<PricingSettings>(sp =>
+          sp.GetRequiredService<IOptions<PricingSettings>>().Value);
 
 
-            builder.Services.AddIdentity<User, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = true)
-                           .AddEntityFrameworkStores<WasalnyyDbContext>()
-                           .AddTokenProvider<DataProtectorTokenProvider<User>>(TokenOptions.DefaultProvider);
+      builder.Services.AddIdentity<User, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = true)
+                     .AddEntityFrameworkStores<WasalnyyDbContext>()
+                     .AddTokenProvider<DataProtectorTokenProvider<User>>(TokenOptions.DefaultProvider);
 
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+      // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+      builder.Services.AddEndpointsApiExplorer();
+      builder.Services.AddSwaggerGen();
 
-            builder.Services.AddBussinessInPL(builder.Configuration);
-            builder.Services.AddBussinessInDAL();
-            builder.Services.AddHttpClient();
-
-            var app = builder.Build();
-
-            app.UseBussinessEventSubscriptions();
-
-
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-			using (var scope = app.Services.CreateScope())
+			builder.Services.AddCors(options =>
 			{
-				var services = scope.ServiceProvider;
-				var userManager = services.GetRequiredService<UserManager<User>>();
-				var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+				options.AddPolicy("AllowAngular",
+					policy => policy.WithOrigins("http://localhost:4200")
+									.AllowAnyHeader()
+									.AllowAnyMethod());
+			});
 
-				await DbSeeder.SeedAsync(userManager, roleManager);
-			}
+      builder.Services.AddBussinessInPL(builder.Configuration);
+      builder.Services.AddBussinessInDAL();
+      builder.Services.AddHttpClient();
+
+      var app = builder.Build();
+
+      app.UseBussinessEventSubscriptions();
+          
+      using (var scope = app.Services.CreateScope())
+      {
+        var services = scope.ServiceProvider;
+        var userManager = services.GetRequiredService<UserManager<User>>();
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+
+        await DbSeeder.SeedAsync(userManager, roleManager);
+      }
 			// Configure the HTTP request pipeline.
 			if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+      {
+          app.UseSwagger();
+          app.UseSwaggerUI();
+      }
             app.UseHttpsRedirection();
             app.UseAuthentication();
             app.UseAuthorization();
+            app.MapHub<TripHub>("/ride");
+			      app.UseCors("AllowAngular");
             app.MapHub<WasalnyyHub>("/Wasalnyy");
-
-
             app.MapControllers();
             app.Run();
         }
