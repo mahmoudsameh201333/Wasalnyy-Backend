@@ -35,7 +35,6 @@ namespace Wasalnyy.DAL.Repo.Implementation
         public async Task<IEnumerable<Zone>> GetCandidateZonesAsync(Coordinates coordinate)
         {
             return await _context.Zones.AsNoTracking()
-                .Include(x=> x.Coordinates)
                 .Where(z => coordinate.Lat >= z.MinLat 
                  && coordinate.Lat<= z.MaxLat
                  && coordinate.Lng >= z.MinLng 
@@ -56,6 +55,11 @@ namespace Wasalnyy.DAL.Repo.Implementation
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             return await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task<IEnumerable<Zone>> GetAllAsync()
+        {
+            return await _context.Zones.AsNoTracking().ToListAsync();
         }
     }
 }

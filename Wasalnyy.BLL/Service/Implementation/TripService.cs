@@ -37,6 +37,7 @@ namespace Wasalnyy.BLL.Service.Implementation
             _riderService = riderService;
             _routeService = routeService;
             _pricingService = pricingService;
+            _zoneService = zoneService;
             _mapper = mapper;
         }
 
@@ -73,9 +74,17 @@ namespace Wasalnyy.BLL.Service.Implementation
             if (trip == null)
                 throw new NotFoundException($"Trip with ID '{tripId}' was not found.");
 
+            if (trip.TripStatus != TripStatus.Requested)
+                throw new InvalidOperationException($"Trip {tripId} is not in a requestable state. Current status: {trip.TripStatus}");
+
+
+            if (!string.IsNullOrEmpty(trip.DriverId))
+                throw new TripAlreadyAssignedToDriver($"Trip with ID '{tripId}' already asigned to driver."); 
+
             var driver = await _driverService.GetByIdAsync(driverId);
             if (driver == null)
                 throw new NotFoundException($"Driver with ID '{driverId}' was not found.");
+
 
             trip.DriverId = driverId;
             trip.TripStatus = TripStatus.Accepted;
@@ -88,11 +97,14 @@ namespace Wasalnyy.BLL.Service.Implementation
             _tripEvents.FireTripAccepted(_mapper.Map<Trip, TripDto>(trip));
         }
 
-        public async Task StartTripAsyncAsync(string driverId, Guid tripId)
+        public async Task StartTripAsync(string driverId, Guid tripId)
         {
             var trip = await _tripRepo.GetByIdAsync(tripId);
             if (trip == null)
                 throw new NotFoundException($"Trip with ID '{tripId}' was not found.");
+
+            if (trip.TripStatus != TripStatus.Accepted)
+                throw new InvalidOperationException($"Trip {tripId} cannot be started from status {trip.TripStatus}");
 
             var driver = await _driverService.GetByIdAsync(driverId);
             if (driver == null)
@@ -102,7 +114,7 @@ namespace Wasalnyy.BLL.Service.Implementation
                 throw new DriverMismatchException($"Driver '{driverId}' is not assigned to trip '{tripId}'.");
 
             trip.TripStatus = TripStatus.Started;
-
+            trip.StartDate = DateTime.UtcNow;
             await _tripRepo.UpdateTripAsync(trip);
             await _tripRepo.SaveChangesAsync();
 
@@ -129,7 +141,7 @@ namespace Wasalnyy.BLL.Service.Implementation
             await _tripRepo.UpdateTripAsync(trip);
             await _tripRepo.SaveChangesAsync();
 
-            await _driverService.SetDriverAvailableAsync(driverId);
+            await _driverService.SetDriverAvailableAsync(driverId, driver.Coordinates);
 
             _tripEvents.FireTripEnded(_mapper.Map<Trip, TripDto>(trip));
         }
@@ -266,6 +278,11 @@ namespace Wasalnyy.BLL.Service.Implementation
             double noPages = Math.Ceiling((double)(await _tripRepo.GetDriverTripsCountAsync(driverId)) / (double)pageSize);
 
             return (int)noPages;
+        }
+
+        public async Task<TripDto?> GetDriverActiveTripAsync(string driverId)
+        {
+            return _mapper.Map<Trip?, TripDto?>(await _tripRepo.GetDriverActiveTripAsync(driverId));
         }
     }
 }

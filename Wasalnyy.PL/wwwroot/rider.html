@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Rider - Uber Clone</title>
+
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Routing -->
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
+    <!-- SignalR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+        /* CONTROL PANEL */
+        #controlPanel {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            width: 300px;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            border-radius: 12px;
+            z-index: 9999;
+            font-family: Arial;
+        }
+
+        #tripInfo {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            width: 300px;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            border-radius: 12px;
+            z-index: 9999;
+            font-family: Arial;
+            display: none;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+            button:disabled {
+                background: #666;
+                cursor: not-allowed;
+            }
+
+            button:hover:not(:disabled) {
+                background: #45a049;
+            }
+
+        .driver-info {
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+
+        .zone-label {
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            pointer-events: none;
+        }
+
+        .zone-info {
+            margin-top: 10px;
+            padding: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .route-legend {
+            position: fixed;
+            top: 150px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: Arial;
+            font-size: 12px;
+            z-index: 9999;
+            display: none;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 4px;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Control Panel -->
+    <div id="controlPanel">
+        <h3>🚗 Request a Ride</h3>
+        <form id="tripForm">
+            <div class="form-group">
+                <label>Pickup Location:</label>
+                <input type="text" id="pickupLocation" placeholder="Click on map to set pickup" readonly>
+                <input type="hidden" id="pickupLat">
+                <input type="hidden" id="pickupLng">
+            </div>
+
+            <div class="form-group">
+                <label>Destination:</label>
+                <input type="text" id="destinationLocation" placeholder="Click on map to set destination" readonly>
+                <input type="hidden" id="destinationLat">
+                <input type="hidden" id="destinationLng">
+            </div>
+
+            <div class="form-group">
+                <label>Payment Method:</label>
+                <select id="paymentMethod">
+                    <option value="Cash">Cash</option>
+                    <option value="CreditCard">Credit Card</option>
+                    <option value="Wallet">Wallet</option>
+                </select>
+            </div>
+
+            <div id="zoneInfo" class="zone-info" style="display: none;">
+                <strong>Current Zone:</strong> <span id="currentZone">None</span>
+            </div>
+
+            <button type="submit" id="requestTripBtn">Request Trip</button>
+            <button type="button" id="cancelTripBtn" style="display: none; background: #f44336; margin-top: 5px;">Cancel Trip</button>
+        </form>
+    </div>
+
+    <!-- Trip Information -->
+    <div id="tripInfo">
+        <h3>🚕 Trip Status</h3>
+        <div id="tripDetails"></div>
+        <div id="driverInfo" class="driver-info" style="display: none;"></div>
+    </div>
+
+    <!-- Route Legend -->
+    <div id="routeLegend" class="route-legend">
+        <h4 style="margin: 0 0 8px 0;">Route Legend</h4>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #2196f3;"></div>
+            <span>Driver to Pickup</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #4caf50;"></div>
+            <span>Pickup to Destination</span>
+        </div>
+    </div>
+
+    <div id="map"></div>
+
+    <script>
+        // =======================================
+        // 🔑 RIDER JWT TOKEN
+        // =======================================
+        const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlMTc0NTdhOC03ZWY4LTRiNjYtYmVhYi0yNDhjMmQ4N2RjYzMiLCJlbWFpbCI6InJpZGVyMTIzQGdtYWlsLmNvbSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJSaWRlciAxMjMiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImUxNzQ1N2E4LTdlZjgtNGI2Ni1iZWFiLTI0OGMyZDg3ZGNjMyIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IlJpZGVyIiwiZXhwIjoxNzYzMjU0NDQyLCJpc3MiOiJXYXNhbG55eUFQSSIsImF1ZCI6Ildhc2Fsbnl5VXNlcnMifQ.7iaT5g6eYtj6e2TYEvravDXpS-FxEjrxWIotCfrSkCQ";
+
+        // =======================================
+        // 🛰️ SIGNALR CONNECTION
+        // =======================================
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("https://localhost:7229/Wasalnyy", {
+                accessTokenFactory: () => token
+            })
+            .withAutomaticReconnect()
+            .build();
+
+        async function startHub() {
+            try {
+                await connection.start();
+                console.log("✔ Rider connected to SignalR Hub");
+            } catch (err) {
+                console.error("❌ Error connecting to hub:", err);
+                setTimeout(startHub, 3000);
+            }
+        }
+        startHub();
+
+        // =======================================
+        // 🗺️ ZONES DATA
+        // =======================================
+        const zones = [
+            {
+                "id": "Zone_1",
+                "center": { "lat": 29.9, "lng": 31 },
+                "coordinates": [
+                    { "lat": 29.886486486486486, "lng": 30.984388949539976 },
+                    { "lat": 29.886486486486486, "lng": 31.015611050460024 },
+                    { "lat": 29.91351351351351, "lng": 31.015611050460024 },
+                    { "lat": 29.91351351351351, "lng": 30.984388949539976 },
+                    { "lat": 29.886486486486486, "lng": 30.984388949539976 }
+                ]
+            },
+            {
+                "id": "Zone_2",
+                "center": { "lat": 29.9, "lng": 31.031222100920044 },
+                "coordinates": [
+                    { "lat": 29.886486486486486, "lng": 31.01561105046002 },
+                    { "lat": 29.886486486486486, "lng": 31.046833151380067 },
+                    { "lat": 29.91351351351351, "lng": 31.046833151380067 },
+                    { "lat": 29.91351351351351, "lng": 31.01561105046002 },
+                    { "lat": 29.886486486486486, "lng": 31.01561105046002 }
+                ]
+            },
+            {
+                "id": "Zone_3",
+                "center": { "lat": 29.9, "lng": 31.062444201840087 },
+                "coordinates": [
+                    { "lat": 29.886486486486486, "lng": 31.046833151380063 },
+                    { "lat": 29.886486486486486, "lng": 31.07805525230011 },
+                    { "lat": 29.91351351351351, "lng": 31.07805525230011 },
+                    { "lat": 29.91351351351351, "lng": 31.046833151380063 },
+                    { "lat": 29.886486486486486, "lng": 31.046833151380063 }
+                ]
+            },
+            {
+                "id": "Zone_4",
+                "center": { "lat": 29.9, "lng": 31.09366630276013 },
+                "coordinates": [
+                    { "lat": 29.886486486486486, "lng": 31.078055252300107 },
+                    { "lat": 29.886486486486486, "lng": 31.109277353220154 },
+                    { "lat": 29.91351351351351, "lng": 31.109277353220154 },
+                    { "lat": 29.91351351351351, "lng": 31.078055252300107 },
+                    { "lat": 29.886486486486486, "lng": 31.078055252300107 }
+                ]
+            },
+            {
+                "id": "Zone_121",
+                "center": { "lat": 30.062162162162167, "lng": 31.374665211040522 },
+                "coordinates": [
+                    { "lat": 30.048648648648655, "lng": 31.3590541605805 },
+                    { "lat": 30.048648648648655, "lng": 31.390276261500546 },
+                    { "lat": 30.07567567567568, "lng": 31.390276261500546 },
+                    { "lat": 30.07567567567568, "lng": 31.3590541605805 },
+                    { "lat": 30.048648648648655, "lng": 31.3590541605805 }
+                ]
+            },
+            {
+                "id": "Zone_122",
+                "center": { "lat": 30.062162162162167, "lng": 31.405887311960566 },
+                "coordinates": [
+                    { "lat": 30.048648648648655, "lng": 31.390276261500542 },
+                    { "lat": 30.048648648648655, "lng": 31.42149836242059 },
+                    { "lat": 30.07567567567568, "lng": 31.42149836242059 },
+                    { "lat": 30.07567567567568, "lng": 31.390276261500542 },
+                    { "lat": 30.048648648648655, "lng": 31.390276261500542 }
+                ]
+            },
+            {
+                "id": "Zone_123",
+                "center": { "lat": 30.062162162162167, "lng": 31.43710941288061 },
+                "coordinates": [
+                    { "lat": 30.048648648648655, "lng": 31.421498362420586 },
+                    { "lat": 30.048648648648655, "lng": 31.452720463340633 },
+                    { "lat": 30.07567567567568, "lng": 31.452720463340633 },
+                    { "lat": 30.07567567567568, "lng": 31.421498362420586 },
+                    { "lat": 30.048648648648655, "lng": 31.421498362420586 }
+                ]
+            }
+        ];
+
+        // =======================================
+        // 🗺️ MAP SETUP + ZONES
+        // =======================================
+        const map = L.map("map").setView([30.06, 31.40], 12);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+
+        // Draw zones on map
+        function drawZones() {
+            zones.forEach(zone => {
+                // Create polygon for the zone
+                const polygon = L.polygon(zone.coordinates, {
+                    color: '#ff6b6b',
+                    weight: 2,
+                    fillColor: '#ff6b6b',
+                    fillOpacity: 0.1,
+                    className: 'zone-polygon'
+                }).addTo(map);
+
+                // Add zone label
+                L.marker(zone.center, {
+                    icon: L.divIcon({
+                        className: 'zone-label',
+                        html: zone.id,
+                        iconSize: [60, 20],
+                        iconAnchor: [30, 10]
+                    })
+                }).addTo(map);
+
+                // Add hover effects
+                polygon.on('mouseover', function () {
+                    this.setStyle({
+                        fillOpacity: 0.2,
+                        weight: 3
+                    });
+                });
+
+                polygon.on('mouseout', function () {
+                    this.setStyle({
+                        fillOpacity: 0.1,
+                        weight: 2
+                    });
+                });
+
+                // Add click event to show zone info
+                polygon.on('click', function () {
+                    console.log(`Zone clicked: ${zone.id}`);
+                    updateZoneInfo(zone.id);
+                });
+            });
+        }
+
+        // Initialize zones
+        drawZones();
+
+        // Function to detect which zone a point is in
+        function getZoneForLocation(lat, lng) {
+            for (const zone of zones) {
+                if (isPointInPolygon({ lat, lng }, zone.coordinates)) {
+                    return zone.id;
+                }
+            }
+            return null;
+        }
+
+        // Point in polygon algorithm
+        function isPointInPolygon(point, polygon) {
+            const x = point.lat, y = point.lng;
+            let inside = false;
+            for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+                const xi = polygon[i].lat, yi = polygon[i].lng;
+                const xj = polygon[j].lat, yj = polygon[j].lng;
+
+                const intersect = ((yi > y) !== (yj > y)) &&
+                    (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+                if (intersect) inside = !inside;
+            }
+            return inside;
+        }
+
+        // Update zone information display
+        function updateZoneInfo(zoneId) {
+            const zoneInfo = document.getElementById('zoneInfo');
+            const currentZone = document.getElementById('currentZone');
+
+            if (zoneId) {
+                zoneInfo.style.display = 'block';
+                currentZone.textContent = zoneId;
+            } else {
+                zoneInfo.style.display = 'none';
+            }
+        }
+
+        // Markers and Routes
+        let pickupMarker = null;
+        let destinationMarker = null;
+        let driverMarker = null;
+        let pickupRouteControl = null;
+        let destinationRouteControl = null;
+        let currentTrip = null;
+        let currentTripData = null;
+
+        const pickupIcon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
+            iconSize: [30, 30],
+            iconAnchor: [15, 15]
+        });
+
+        const destinationIcon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
+            iconSize: [30, 30],
+            iconAnchor: [15, 15]
+        });
+
+        const driverIcon = L.icon({
+            iconUrl: 'car.png',
+            iconSize: [40, 40],
+            iconAnchor: [20, 20]
+        });
+
+        // =======================================
+        // 🗺️ MAP CLICK HANDLERS - SIMPLE AND WORKING!
+        // =======================================
+        map.on('click', function (e) {
+            const clickedZone = getZoneForLocation(e.latlng.lat, e.latlng.lng);
+            updateZoneInfo(clickedZone);
+
+            if (!pickupMarker) {
+                // Set pickup location
+                setPickupLocation(e.latlng.lat, e.latlng.lng);
+            } else if (!destinationMarker) {
+                // Set destination location
+                setDestinationLocation(e.latlng.lat, e.latlng.lng);
+            }
+            // If both are set, do nothing - user needs to clear first
+        });
+
+        function setPickupLocation(lat, lng) {
+            if (pickupMarker) {
+                map.removeLayer(pickupMarker);
+            }
+
+            pickupMarker = L.marker([lat, lng], { icon: pickupIcon })
+                .addTo(map)
+                .bindPopup('Pickup Location')
+                .openPopup();
+
+            document.getElementById('pickupLat').value = lat;
+            document.getElementById('pickupLng').value = lng;
+            document.getElementById('pickupLocation').value = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+
+            // Update zone info for pickup location
+            const pickupZone = getZoneForLocation(lat, lng);
+            updateZoneInfo(pickupZone);
+
+            console.log(`📍 Pickup set to: ${lat}, ${lng}`);
+        }
+
+        function setDestinationLocation(lat, lng) {
+            if (destinationMarker) {
+                map.removeLayer(destinationMarker);
+            }
+
+            destinationMarker = L.marker([lat, lng], { icon: destinationIcon })
+                .addTo(map)
+                .bindPopup('Destination')
+                .openPopup();
+
+            document.getElementById('destinationLat').value = lat;
+            document.getElementById('destinationLng').value = lng;
+            document.getElementById('destinationLocation').value = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+
+            console.log(`🎯 Destination set to: ${lat}, ${lng}`);
+        }
+
+        // =======================================
+        // 🧭 SHOW BOTH ROUTES (ONLY AFTER DRIVER ACCEPTS)
+        // =======================================
+        function showBothRoutes(driverCoords, pickupCoords, destinationCoords) {
+            // Clean up existing routes
+            cleanupRoutes();
+
+            const driverPosition = L.latLng(driverCoords.lat, driverCoords.lng);
+            const pickupPosition = L.latLng(pickupCoords.lat, pickupCoords.lng);
+            const destinationPosition = L.latLng(destinationCoords.lat, destinationCoords.lng);
+
+            // Update or create driver marker
+            if (driverMarker) {
+                driverMarker.setLatLng(driverPosition);
+            } else {
+                driverMarker = L.marker(driverPosition, { icon: driverIcon })
+                    .addTo(map)
+                    .bindPopup('Your Driver')
+                    .openPopup();
+            }
+
+            // Create route from driver to pickup (Blue)
+            pickupRouteControl = L.Routing.control({
+                waypoints: [driverPosition, pickupPosition],
+                createMarker: () => null,
+                show: true,
+                addWaypoints: false,
+                routeWhileDragging: false,
+                lineOptions: {
+                    styles: [{ color: '#2196f3', weight: 5, opacity: 0.7 }]
+                }
+            }).addTo(map);
+
+            // Create route from pickup to destination (Green)
+            destinationRouteControl = L.Routing.control({
+                waypoints: [pickupPosition, destinationPosition],
+                createMarker: () => null,
+                show: true,
+                addWaypoints: false,
+                routeWhileDragging: false,
+                lineOptions: {
+                    styles: [{ color: '#4caf50', weight: 5, opacity: 0.7 }]
+                }
+            }).addTo(map);
+
+            // Show route legend
+            document.getElementById('routeLegend').style.display = 'block';
+
+            // Fit map to show all points
+            const group = new L.FeatureGroup([driverMarker, pickupMarker, destinationMarker]);
+            map.fitBounds(group.getBounds().pad(0.1));
+
+            console.log("🗺️ Showing both routes on rider map");
+        }
+
+        // =======================================
+        // 🧹 CLEANUP ROUTES
+        // =======================================
+        function cleanupRoutes() {
+            if (pickupRouteControl) {
+                map.removeControl(pickupRouteControl);
+                pickupRouteControl = null;
+            }
+            if (destinationRouteControl) {
+                map.removeControl(destinationRouteControl);
+                destinationRouteControl = null;
+            }
+        }
+
+        // =======================================
+        // 🚗 TRIP MANAGEMENT
+        // =======================================
+        document.getElementById('tripForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            requestTrip();
+        });
+
+        document.getElementById('cancelTripBtn').addEventListener('click', function () {
+            // Implement cancel trip functionality
+            alert('Cancel trip functionality to be implemented');
+        });
+
+        function requestTrip() {
+            const pickupLat = document.getElementById('pickupLat').value;
+            const pickupLng = document.getElementById('pickupLng').value;
+            const destinationLat = document.getElementById('destinationLat').value;
+            const destinationLng = document.getElementById('destinationLng').value;
+            const paymentMethod = document.getElementById('paymentMethod').value;
+
+            if (!pickupLat || !destinationLat) {
+                alert('Please set both pickup and destination locations');
+                return;
+            }
+
+            const tripData = new FormData();
+            tripData.append('PaymentMethod', paymentMethod);
+            tripData.append('PickupCoordinates.Lat', pickupLat);
+            tripData.append('PickupCoordinates.Lng', pickupLng);
+            tripData.append('DistinationCoordinates.Lat', destinationLat);
+            tripData.append('DistinationCoordinates.Lng', destinationLng);
+
+            fetch("https://localhost:7229/api/Trip/Request", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                },
+                body: tripData
+            })
+                .then(response => {
+                    if (response.ok) {
+                        console.log("✔ Trip requested successfully");
+                        document.getElementById('requestTripBtn').disabled = true;
+                        document.getElementById('cancelTripBtn').style.display = 'block';
+                        document.getElementById('tripInfo').style.display = 'block';
+
+                        const pickupZone = getZoneForLocation(parseFloat(pickupLat), parseFloat(pickupLng));
+
+                        // Store trip data for route display
+                        currentTripData = {
+                            pickupCoordinates: { lat: parseFloat(pickupLat), lng: parseFloat(pickupLng) },
+                            distinationCoordinates: { lat: parseFloat(destinationLat), lng: parseFloat(destinationLng) }
+                        };
+
+                        document.getElementById('tripDetails').innerHTML = `
+                                <strong>Status:</strong> Waiting for driver...<br>
+                                <strong>Pickup:</strong> ${pickupLat}, ${pickupLng}<br>
+                                <strong>Destination:</strong> ${destinationLat}, ${destinationLng}<br>
+                                <strong>Payment:</strong> ${paymentMethod}<br>
+                                <strong>Zone:</strong> ${pickupZone || 'Unknown'}
+                            `;
+                    }
+                })
+                .catch(error => {
+                    console.error("❌ Error requesting trip:", error);
+                });
+        }
+
+        function updateDriverLocation(coordinates) {
+            if (driverMarker) {
+                driverMarker.setLatLng([coordinates.lat, coordinates.lng]);
+
+                // Update routes if we have all necessary data
+                if (currentTripData && currentTripData.pickupCoordinates && currentTripData.distinationCoordinates) {
+                    showBothRoutes(
+                        coordinates,
+                        currentTripData.pickupCoordinates,
+                        currentTripData.distinationCoordinates
+                    );
+                }
+            } else {
+                driverMarker = L.marker([coordinates.lat, coordinates.lng], { icon: driverIcon })
+                    .addTo(map)
+                    .bindPopup('Your Driver')
+                    .openPopup();
+            }
+        }
+
+        // =======================================
+        // 📡 SIGNALR EVENTS
+        // =======================================
+        connection.on("tripAccepeted", (driver) => {
+            console.log("🎉 Trip accepted by driver:", driver);
+
+            document.getElementById('driverInfo').style.display = 'block';
+            document.getElementById('driverInfo').innerHTML = `
+                        <strong>Driver Assigned:</strong><br>
+                        <strong>Name:</strong> ${driver.fullName}<br>
+                        <strong>Vehicle:</strong> ${driver.vehicle?.model || 'N/A'} ${driver.vehicle?.color || ''}<br>
+                        <strong>License:</strong> ${driver.license}<br>
+                        <strong>Status:</strong> Driver is on the way to pickup
+                    `;
+
+            document.getElementById('tripDetails').innerHTML =
+                document.getElementById('tripDetails').innerHTML.replace('Waiting for driver...', 'Driver on the way');
+
+            // The driver location will come from tripLocationUpdated events
+        });
+
+        connection.on("tripLocationUpdated", (coordinates) => {
+            console.log("📍 Driver location updated:", coordinates);
+            updateDriverLocation(coordinates);
+        });
+
+        connection.on("tripStarted", (trip) => {
+            console.log("🚗 Trip started:", trip);
+            currentTrip = trip;
+
+            document.getElementById('driverInfo').innerHTML =
+                document.getElementById('driverInfo').innerHTML.replace('Driver is on the way to pickup', 'Trip in progress - Going to destination');
+
+            document.getElementById('tripDetails').innerHTML =
+                document.getElementById('tripDetails').innerHTML.replace('Driver on the way', 'Trip in progress');
+        });
+
+        connection.on("tripEnded", (trip) => {
+            console.log("🏁 Trip ended:", trip);
+            currentTrip = null;
+
+            document.getElementById('tripDetails').innerHTML =
+                document.getElementById('tripDetails').innerHTML.replace('Trip in progress', 'Trip completed');
+
+            document.getElementById('requestTripBtn').disabled = false;
+            document.getElementById('cancelTripBtn').style.display = 'none';
+
+            // Clean up markers and routes after a delay
+            setTimeout(() => {
+                if (driverMarker) {
+                    map.removeLayer(driverMarker);
+                    driverMarker = null;
+                }
+                cleanupRoutes();
+                document.getElementById('driverInfo').style.display = 'none';
+                document.getElementById('routeLegend').style.display = 'none';
+            }, 5000);
+        });
+    </script>
+</body>
+</html>

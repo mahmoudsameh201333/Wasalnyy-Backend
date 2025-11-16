@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Wasalnyy.BLL.EventHandlers.Abstraction;
 
-namespace Wasalnyy.BLL.EventHandlers.Implementation
+namespace Wasalnyy.PL.EventHandlers.Implementation
 {
     public class RiderNotifier : IRiderNotifier
     {

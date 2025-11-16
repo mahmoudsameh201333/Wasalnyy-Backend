@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Wasalnyy.BLL.DTO.Driver;
+using Wasalnyy.BLL.DTO.Rider;
 using Wasalnyy.BLL.Exceptions;
 using Wasalnyy.BLL.Service.Abstraction;
 using Wasalnyy.DAL.Entities;
@@ -21,14 +22,15 @@ namespace Wasalnyy.BLL.Service.Implementation
         public RiderService(IRiderRepo riderRepo, IMapper mapper)
         {
             _riderRepo = riderRepo;
+            _mapper = mapper;
         }
-        public async Task<ReturnDriverDto?> GetByIdAsync(string id)
+        public async Task<ReturnRiderDto?> GetByIdAsync(string id)
         {
             var rider = await _riderRepo.GetByIdAsync(id);
             if (rider == null)
                 throw new NotFoundException($"Rider with ID '{id}' was not found.");
 
-            return _mapper.Map<Rider, ReturnDriverDto>(rider);
+            return _mapper.Map<Rider, ReturnRiderDto>(rider);
         }
     }
 }

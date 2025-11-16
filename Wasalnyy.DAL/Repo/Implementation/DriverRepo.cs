@@ -34,9 +34,10 @@ namespace Wasalnyy.DAL.Repo.Implementation
 
         public async Task<Driver?> GetByIdAsync(string driverId)
         {
-            return await _context.Drivers.AsNoTracking()
+            return await _context.Drivers
                 .Include(d => d.Vehicle)
                 .Include(d => d.Zone)
+                .Include(d=> d.Coordinates)
                 .SingleOrDefaultAsync(x => x.Id == driverId);
         }
 

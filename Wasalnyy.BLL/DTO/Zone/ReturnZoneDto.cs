@@ -10,7 +10,6 @@ namespace Wasalnyy.BLL.DTO.Zone
     public class ReturnZoneDto
     {
         public Guid Id { get; set; }
-        public string Name { get; set; }
         public IEnumerable<Coordinates> Coordinates { get; set; } = Enumerable.Empty<Coordinates>();
     }
 }

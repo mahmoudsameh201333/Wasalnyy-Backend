@@ -13,7 +13,7 @@ namespace Wasalnyy.BLL.Service.Abstraction
     {
         Task SetDriverOfflineAsync(string driverId);
         Task SetDriverInTripAsync(string driverId, Guid tripId);
-        Task SetDriverAvailableAsync(string driverId);
+        Task SetDriverAvailableAsync(string driverId, Coordinates coordinates);
         Task UpdateLocationAsync(string driverId, Coordinates coordinate);
         Task<ReturnDriverDto?> GetByIdAsync(string id);
         Task<IEnumerable<ReturnDriverDto>> GetAvailableDriversByZoneAsync(Guid zoneId);

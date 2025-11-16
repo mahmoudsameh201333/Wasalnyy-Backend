@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Driver - Uber Clone</title>
+
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Routing -->
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
+    <!-- SignalR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+        /* TRIPS PANEL */
+        #tripsPanel {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            width: 350px;
+            max-height: 500px;
+            overflow-y: auto;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            border-radius: 12px;
+            z-index: 9999;
+            font-family: Arial;
+        }
+
+            #tripsPanel h3 {
+                margin-top: 0;
+                text-align: center;
+            }
+
+        .trip-item {
+            padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border-left: 4px solid #4caf50;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+            .trip-item:hover {
+                background: rgba(255,255,255,0.2);
+            }
+
+            .trip-item.accepted {
+                border-left-color: #2196f3;
+            }
+
+            .trip-item.started {
+                border-left-color: #ff9800;
+            }
+
+            .trip-item.ended {
+                border-left-color: #f44336;
+            }
+
+        .trip-controls {
+            margin-top: 8px;
+            display: flex;
+            gap: 8px;
+        }
+
+            .trip-controls button {
+                padding: 6px 12px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 12px;
+            }
+
+        .btn-accept {
+            background: #4caf50;
+            color: white;
+        }
+
+        .btn-start {
+            background: #ff9800;
+            color: white;
+        }
+
+        .btn-end {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+
+        #activeTripInfo {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 12px;
+            border-radius: 12px;
+            z-index: 9999;
+            font-family: Arial;
+            max-width: 300px;
+        }
+
+        .zone-label {
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            pointer-events: none;
+        }
+
+        #connectionStatus {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: Arial;
+            font-size: 12px;
+            z-index: 9999;
+        }
+
+        .status-connected {
+            color: #4caf50;
+        }
+
+        .status-disconnected {
+            color: #f44336;
+        }
+
+        .status-reconnecting {
+            color: #ff9800;
+        }
+
+        #debugInfo {
+            position: fixed;
+            bottom: 50px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: Arial;
+            font-size: 10px;
+            z-index: 9999;
+            max-width: 400px;
+            display: none;
+        }
+
+        #movementInfo {
+            position: fixed;
+            bottom: 90px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: Arial;
+            font-size: 12px;
+            z-index: 9999;
+        }
+
+        .route-legend {
+            position: fixed;
+            top: 150px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: Arial;
+            font-size: 12px;
+            z-index: 9999;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 4px;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Side panel showing zone trips -->
+    <div id="tripsPanel">
+        <h3>📦 Available Trips</h3>
+        <div id="tripsList"></div>
+    </div>
+
+    <!-- Active trip information -->
+    <div id="activeTripInfo" style="display: none;">
+        <h3>🚗 Active Trip</h3>
+        <div id="activeTripDetails"></div>
+        <div id="tripNavigation" style="margin-top: 10px;"></div>
+    </div>
+
+    <!-- Route Legend -->
+    <!--<div id="routeLegend" class="route-legend" style="display: none;">
+        <h4 style="margin: 0 0 8px 0;">Route Legend</h4>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #2196f3;"></div>
+            <span>To Pickup</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #4caf50;"></div>
+            <span>To Destination</span>
+        </div>
+    </div>-->
+
+    <!-- Movement Info -->
+    <div id="movementInfo">
+        💡 Click anywhere on map to move car
+    </div>
+
+    <!-- Connection Status -->
+    <div id="connectionStatus">
+        Status: <span id="statusText" class="status-disconnected">Disconnected</span>
+        <button onclick="toggleDebug()" style="margin-left: 10px; padding: 2px 6px; font-size: 10px;">Debug</button>
+    </div>
+
+    <div id="debugInfo">
+        <div id="debugContent"></div>
+    </div>
+
+    <div id="map"></div>
+
+    <script>
+        // =======================================
+        // 🔑 DRIVER JWT TOKEN
+        // =======================================
+        const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyOGFmYzAzZS1hZDczLTRkZGYtODI4Yi02Y2JmNmM1NTJhMzUiLCJlbWFpbCI6ImRyaXZlckBnbWFpbC5jb20iLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiZHJpdmVyIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvbmFtZWlkZW50aWZpZXIiOiIyOGFmYzAzZS1hZDczLTRkZGYtODI4Yi02Y2JmNmM1NTJhMzUiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJEcml2ZXIiLCJleHAiOjE3NjMyNTQ0MTgsImlzcyI6Ildhc2Fsbnl5QVBJIiwiYXVkIjoiV2FzYWxueXlVc2VycyJ9.r8HAU3uqZG0TyxKq_o42uIYLRE4Ax6qCUIbhjJCys5E";
+
+        // =======================================
+        // 🛰️ SIGNALR CONNECTION WITH FALLBACKS
+        // =======================================
+        let connection = null;
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 10;
+
+        function initializeConnection() {
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl("https://localhost:7229/Wasalnyy", {
+                    accessTokenFactory: () => token,
+                    transport: signalR.HttpTransportType.LongPolling | signalR.HttpTransportType.ServerSentEvents | signalR.HttpTransportType.WebSockets
+                })
+                .withAutomaticReconnect({
+                    nextRetryDelayInMilliseconds: retryContext => {
+                        reconnectAttempts = retryContext.previousRetryCount;
+                        if (retryContext.previousRetryCount >= maxReconnectAttempts) {
+                            return null;
+                        }
+                        return Math.min(1000 * Math.pow(2, retryContext.previousRetryCount), 30000);
+                    }
+                })
+                .configureLogging(signalR.LogLevel.Warning)
+                .build();
+
+            setupConnectionHandlers();
+        }
+
+        function setupConnectionHandlers() {
+            connection.onreconnecting(error => {
+                updateConnectionStatus('reconnecting', 'Reconnecting...');
+                addDebugLog(`Reconnecting due to: ${error?.message || 'Unknown error'}`);
+            });
+
+            connection.onreconnected(connectionId => {
+                reconnectAttempts = 0;
+                updateConnectionStatus('connected', 'Connected');
+                addDebugLog(`Reconnected with ID: ${connectionId}`);
+                setTimeout(callSetAsAvailable, 1000);
+            });
+
+            connection.onclose(error => {
+                updateConnectionStatus('disconnected', 'Disconnected');
+                addDebugLog(`Connection closed: ${error?.message || 'Unknown reason'}`);
+            });
+
+            // SignalR event handlers
+            connection.on("availableTripsInZone", (trips) => {
+                console.log("📢 Trips received from zone:", trips);
+                addDebugLog(`Received ${Array.isArray(trips) ? trips.length : 1} trip(s)`);
+                showTrips(trips);
+            });
+
+            connection.on("tripStarted", (trip) => {
+                console.log("🚗 Trip started:", trip);
+                activeTrip = trip.id;
+                currentTripData = trip;
+                showActiveTripInfo(trip);
+                updateTripUI();
+                addDebugLog(`Trip started: ${trip.id}`);
+
+                // Update routes when trip starts
+                if (trip.pickupCoordinates && trip.distinationCoordinates) {
+                    showBothRoutes(trip.pickupCoordinates, trip.distinationCoordinates);
+                }
+            });
+
+            connection.on("tripEnded", (trip) => {
+                console.log("🏁 Trip ended:", trip);
+                activeTrip = null;
+                currentTripData = null;
+                document.getElementById('activeTripInfo').style.display = 'none';
+                document.getElementById('routeLegend').style.display = 'none';
+                updateTripUI();
+                addDebugLog(`Trip ended: ${trip.id}`);
+
+                // Clean up markers and routing
+                cleanupRoutesAndMarkers();
+            });
+
+            // Handle connection errors
+            connection.on("onerror", (error) => {
+                console.error("❌ SignalR error:", error);
+                addDebugLog(`SignalR error: ${error}`);
+            });
+        }
+
+        async function startHub() {
+            try {
+                if (connection && connection.state === signalR.HubConnectionState.Connected) {
+                    return;
+                }
+
+                updateConnectionStatus('reconnecting', 'Connecting...');
+                addDebugLog('Starting connection...');
+
+                await connection.start();
+                reconnectAttempts = 0;
+                updateConnectionStatus('connected', 'Connected');
+                addDebugLog('Successfully connected to SignalR hub');
+
+                console.log("✔ Connected to SignalR Hub");
+                callSetAsAvailable();
+
+            } catch (err) {
+                reconnectAttempts++;
+                updateConnectionStatus('disconnected', 'Connection Failed');
+
+                let errorMessage = err.message;
+                if (err.statusCode === 401) {
+                    errorMessage = "Authentication failed - Token may be expired";
+                } else if (err.statusCode === 404) {
+                    errorMessage = "Hub endpoint not found - Check server configuration";
+                }
+
+                addDebugLog(`Connection failed (attempt ${reconnectAttempts}): ${errorMessage}`);
+                console.error("❌ Error connecting to hub:", err);
+
+                if (reconnectAttempts < maxReconnectAttempts) {
+                    const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
+                    addDebugLog(`Retrying in ${delay}ms...`);
+                    setTimeout(startHub, delay);
+                } else {
+                    addDebugLog('Max reconnection attempts reached. Please refresh the page.');
+                }
+            }
+        }
+
+        function updateConnectionStatus(status, message) {
+            const statusElement = document.getElementById('statusText');
+            statusElement.textContent = message;
+            statusElement.className = `status-${status}`;
+            console.log(`Connection status: ${status} - ${message}`);
+        }
+
+        function addDebugLog(message) {
+            const debugContent = document.getElementById('debugContent');
+            const timestamp = new Date().toLocaleTimeString();
+            debugContent.innerHTML = `<div>[${timestamp}] ${message}</div>` + debugContent.innerHTML;
+        }
+
+        function toggleDebug() {
+            const debugInfo = document.getElementById('debugInfo');
+            debugInfo.style.display = debugInfo.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Initialize connection when page loads
+        initializeConnection();
+        startHub();
+
+        // =======================================
+        // 🗺️ ZONES DATA
+        // =======================================
+        const zones = [
+            {
+                "id": "Zone_1",
+                "center": { "lat": 29.9, "lng": 31 },
+                "coordinates": [
+                    { "lat": 29.886486486486486, "lng": 30.984388949539976 },
+                    { "lat": 29.886486486486486, "lng": 31.015611050460024 },
+                    { "lat": 29.91351351351351, "lng": 31.015611050460024 },
+                    { "lat": 29.91351351351351, "lng": 30.984388949539976 },
+                    { "lat": 29.886486486486486, "lng": 30.984388949539976 }
+                ]
+            },
+            // ... (your zones data remains the same)
+        ];
+
+        // =======================================
+        // 🗺️ MAP + CAR + ZONES
+        // =======================================
+        const map = L.map("map").setView([30.06, 31.40], 12);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+
+        // Draw zones on map
+        function drawZones() {
+            zones.forEach(zone => {
+                const polygon = L.polygon(zone.coordinates, {
+                    color: '#3388ff',
+                    weight: 2,
+                    fillColor: '#3388ff',
+                    fillOpacity: 0.1,
+                }).addTo(map);
+
+                L.marker(zone.center, {
+                    icon: L.divIcon({
+                        className: 'zone-label',
+                        html: zone.id,
+                        iconSize: [60, 20],
+                        iconAnchor: [30, 10]
+                    })
+                }).addTo(map);
+
+                polygon.on('mouseover', function () {
+                    this.setStyle({ fillOpacity: 0.2, weight: 3 });
+                });
+                polygon.on('mouseout', function () {
+                    this.setStyle({ fillOpacity: 0.1, weight: 2 });
+                });
+            });
+        }
+
+        drawZones();
+
+        const carIcon = L.icon({
+            iconUrl: "car.png",
+            iconSize: [70, 70],
+            iconAnchor: [35, 35]
+        });
+
+        const pickupIcon = L.icon({
+            iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
+            iconSize: [30, 30],
+            iconAnchor: [15, 15]
+        });
+
+        const destinationIcon = L.icon({
+            iconUrl: "https://cdn-icons-png.flaticon.com/512/3474/3474365.png",
+            iconSize: [30, 30],
+            iconAnchor: [15, 15]
+        });
+
+        let carMarker = L.marker([30.06, 31.40], { icon: carIcon }).addTo(map);
+        let pickupMarker = null;
+        let destinationMarker = null;
+        let pickupRouteControl = null;
+        let destinationRouteControl = null;
+        let activeTrip = null;
+        let currentTripData = null;
+        let isAnimating = false;
+
+        // =======================================
+        // 📡 CALL SetAsAvailable
+        // =======================================
+        function callSetAsAvailable() {
+            fetch("https://localhost:7229/api/Driver/SetAsAvailable", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({ lat: 30.06, lng: 31.40 })
+            })
+                .then(response => {
+                    if (response.ok) {
+                        console.log("✔ Driver SetAsAvailable called");
+                        addDebugLog("Set as available successfully");
+                    } else {
+                        console.error("❌ SetAsAvailable failed:", response.status);
+                        addDebugLog(`SetAsAvailable failed: ${response.status}`);
+                    }
+                })
+                .catch(error => {
+                    console.error("❌ SetAsAvailable error:", error);
+                    addDebugLog(`SetAsAvailable error: ${error.message}`);
+                });
+        }
+
+        // =======================================
+        // 📡 UPDATE DRIVER LOCATION
+        // =======================================
+        function updateDriverLocation(lat, lng) {
+            fetch("https://localhost:7229/api/Driver/UpdateLocation", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({ lat, lng })
+            })
+                .catch(error => {
+                    console.error("❌ UpdateLocation error:", error);
+                });
+        }
+
+        // =======================================
+        // 🧭 SHOW BOTH ROUTES (PICKUP + DESTINATION)
+        // =======================================
+        function showBothRoutes(pickupCoords, destinationCoords) {
+            // Clean up existing routes and markers
+            cleanupRoutesAndMarkers();
+
+            const carPosition = carMarker.getLatLng();
+            const pickupPosition = L.latLng(pickupCoords.lat, pickupCoords.lng);
+            const destinationPosition = L.latLng(destinationCoords.lat, destinationCoords.lng);
+
+            // Add pickup marker
+            pickupMarker = L.marker(pickupPosition, { icon: pickupIcon })
+                .addTo(map)
+                .bindPopup('Pickup Location')
+                .openPopup();
+
+            // Add destination marker
+            destinationMarker = L.marker(destinationPosition, { icon: destinationIcon })
+                .addTo(map)
+                .bindPopup('Destination')
+                .openPopup();
+
+            // Create route to pickup (Blue)
+            pickupRouteControl = L.Routing.control({
+                waypoints: [carPosition, pickupPosition],
+                createMarker: () => null,
+                show: true,
+                addWaypoints: false,
+                routeWhileDragging: false,
+                lineOptions: {
+                    styles: [{ color: '#2196f3', weight: 5, opacity: 0.7 }]
+                }
+            }).addTo(map);
+
+            // Create route from pickup to destination (Green)
+            destinationRouteControl = L.Routing.control({
+                waypoints: [pickupPosition, destinationPosition],
+                createMarker: () => null,
+                show: true,
+                addWaypoints: false,
+                routeWhileDragging: false,
+                lineOptions: {
+                    styles: [{ color: '#4caf50', weight: 5, opacity: 0.7 }]
+                }
+            }).addTo(map);
+
+            // Show route legend
+            document.getElementById('routeLegend').style.display = 'block';
+
+            // Fit map to show all points
+            const group = new L.FeatureGroup([carMarker, pickupMarker, destinationMarker]);
+            map.fitBounds(group.getBounds().pad(0.1));
+
+            addDebugLog(`Showing both routes: pickup and destination`);
+        }
+
+        // =======================================
+        // 🧹 CLEANUP ROUTES AND MARKERS
+        // =======================================
+        function cleanupRoutesAndMarkers() {
+            if (pickupMarker) {
+                map.removeLayer(pickupMarker);
+                pickupMarker = null;
+            }
+            if (destinationMarker) {
+                map.removeLayer(destinationMarker);
+                destinationMarker = null;
+            }
+            if (pickupRouteControl) {
+                map.removeControl(pickupRouteControl);
+                pickupRouteControl = null;
+            }
+            if (destinationRouteControl) {
+                map.removeControl(destinationRouteControl);
+                destinationRouteControl = null;
+            }
+        }
+
+        // =======================================
+        // 🚗 MOVE CAR ON MAP CLICK (ALWAYS ALLOWED)
+        // =======================================
+        map.on("click", (e) => {
+            if (isAnimating) {
+                addDebugLog("Already moving, please wait...");
+                return;
+            }
+
+            const start = carMarker.getLatLng();
+            const end = e.latlng;
+
+            addDebugLog(`Moving from ${start.lat.toFixed(4)}, ${start.lng.toFixed(4)} to ${end.lat.toFixed(4)}, ${end.lng.toFixed(4)}`);
+
+            // Create temporary route for visualization only
+            const tempRouteControl = L.Routing.control({
+                waypoints: [start, end],
+                createMarker: () => null,
+                show: false,
+                addWaypoints: false,
+                routeWhileDragging: false
+            }).addTo(map);
+
+            tempRouteControl.on("routesfound", (evt) => {
+                // Remove the temporary route control
+                map.removeControl(tempRouteControl);
+
+                // Animate the car along the route
+                animateCar(evt.routes[0].coordinates);
+            });
+        });
+
+        function animateCar(coords) {
+            if (isAnimating) return;
+
+            isAnimating = true;
+            let i = 0;
+
+            const interval = setInterval(() => {
+                if (i >= coords.length) {
+                    clearInterval(interval);
+                    isAnimating = false;
+
+                    // After animation completes, restore the trip routes if there's an active trip
+                    if (activeTrip && currentTripData && currentTripData.pickupCoordinates && currentTripData.distinationCoordinates) {
+                        showBothRoutes(currentTripData.pickupCoordinates, currentTripData.distinationCoordinates);
+                    }
+                    return;
+                }
+
+                const { lat, lng } = coords[i];
+                carMarker.setLatLng([lat, lng]);
+                updateDriverLocation(lat, lng);
+                i++;
+            }, 300);
+        }
+
+        // =======================================
+        // 🧩 TRIP MANAGEMENT FUNCTIONS
+        // =======================================
+        function acceptTrip(tripId) {
+            console.log("🔄 Accepting trip:", tripId);
+            addDebugLog(`Accepting trip: ${tripId}`);
+
+            // Find the trip data from the displayed trips
+            const tripElement = document.querySelector(`[data-trip-id="${tripId}"]`);
+            if (!tripElement) {
+                console.error("❌ Trip not found in UI");
+                return;
+            }
+
+            // Extract trip data from the trip element
+            const tripText = tripElement.textContent;
+            const pickupMatch = tripText.match(/Pickup:\s*([\d.-]+),\s*([\d.-]+)/);
+            const destinationMatch = tripText.match(/Destination:\s*([\d.-]+),\s*([\d.-]+)/);
+
+            if (!pickupMatch || !destinationMatch) {
+                console.error("❌ Could not extract coordinates from trip");
+                return;
+            }
+
+            const tripData = {
+                id: tripId,
+                tripStatus: 'Accepted',
+                pickupCoordinates: {
+                    lat: parseFloat(pickupMatch[1]),
+                    lng: parseFloat(pickupMatch[2])
+                },
+                distinationCoordinates: {
+                    lat: parseFloat(destinationMatch[1]),
+                    lng: parseFloat(destinationMatch[2])
+                }
+            };
+
+            fetch("https://localhost:7229/api/Driver/AcceptTrip", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify(tripId)
+            })
+                .then(async response => {
+                    if (response.ok) {
+                        console.log("✔ Trip accepted successfully");
+                        addDebugLog("Trip accepted successfully");
+                        activeTrip = tripId;
+                        currentTripData = tripData;
+
+                        // Show both routes immediately after accepting
+                        showBothRoutes(tripData.pickupCoordinates, tripData.distinationCoordinates);
+
+                        updateTripUI();
+                        showActiveTripInfo(tripData);
+                    } else {
+                        const errorText = await response.text();
+                        console.error("❌ AcceptTrip failed:", response.status, errorText);
+                        addDebugLog(`AcceptTrip failed: ${response.status} - ${errorText}`);
+                    }
+                })
+                .catch(error => {
+                    console.error("❌ AcceptTrip error:", error);
+                    addDebugLog(`AcceptTrip error: ${error.message}`);
+                });
+        }
+
+        function startTrip(tripId) {
+            console.log("🔄 Starting trip:", tripId);
+            addDebugLog(`Starting trip: ${tripId}`);
+
+            fetch("https://localhost:7229/api/Driver/StartTrip", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify(tripId)
+            })
+                .then(async response => {
+                    if (response.ok) {
+                        console.log("✔ Trip started successfully");
+                        addDebugLog("Trip started successfully");
+
+                        if (currentTripData) {
+                            currentTripData.tripStatus = 'Started';
+                        }
+
+                        updateTripUI();
+                        showActiveTripInfo(currentTripData);
+                    } else {
+                        const errorText = await response.text();
+                        console.error("❌ StartTrip failed:", response.status, errorText);
+                        addDebugLog(`StartTrip failed: ${response.status} - ${errorText}`);
+                    }
+                })
+                .catch(error => {
+                    console.error("❌ StartTrip error:", error);
+                    addDebugLog(`StartTrip error: ${error.message}`);
+                });
+        }
+
+        function endTrip(tripId) {
+            console.log("🔄 Ending trip:", tripId);
+            addDebugLog(`Ending trip: ${tripId}`);
+
+            fetch("https://localhost:7229/api/Driver/EndTrip", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify(tripId)
+            })
+                .then(async response => {
+                    if (response.ok) {
+                        console.log("✔ Trip ended successfully");
+                        addDebugLog("Trip ended successfully");
+                        activeTrip = null;
+                        currentTripData = null;
+                        document.getElementById('activeTripInfo').style.display = 'none';
+                        document.getElementById('routeLegend').style.display = 'none';
+                        updateTripUI();
+
+                        // Clean up everything
+                        cleanupRoutesAndMarkers();
+                    } else {
+                        const errorText = await response.text();
+                        console.error("❌ EndTrip failed:", response.status, errorText);
+                        addDebugLog(`EndTrip failed: ${response.status} - ${errorText}`);
+                    }
+                })
+                .catch(error => {
+                    console.error("❌ EndTrip error:", error);
+                    addDebugLog(`EndTrip error: ${error.message}`);
+                });
+        }
+
+        function updateTripUI() {
+            const tripItems = document.querySelectorAll('.trip-item');
+            tripItems.forEach(item => {
+                const tripId = item.getAttribute('data-trip-id');
+                if (tripId === activeTrip) {
+                    item.classList.add('accepted');
+                }
+            });
+        }
+
+        // =======================================
+        // 📋 SHOW TRIPS IN PANEL
+        // =======================================
+        function showTrips(trips) {
+            const list = document.getElementById("tripsList");
+            list.innerHTML = '';
+
+            if (!Array.isArray(trips)) {
+                trips = [trips];
+            }
+
+            trips.forEach(trip => {
+                if (trip.driverId && trip.driverId !== "28afc03e-ad73-4ddf-828b-6cbf6c552a35") return;
+
+                const box = document.createElement("div");
+                box.classList.add("trip-item");
+                box.setAttribute('data-trip-id', trip.id);
+
+                const isActiveTrip = trip.id === activeTrip;
+                const isAccepted = trip.tripStatus === 'Accepted' || isActiveTrip;
+                const isStarted = trip.tripStatus === 'Started';
+                const isEnded = trip.tripStatus === 'Ended';
+
+                if (isAccepted) box.classList.add('accepted');
+                if (isStarted) box.classList.add('started');
+                if (isEnded) box.classList.add('ended');
+
+                box.innerHTML = `
+                        <strong>Trip ID:</strong> ${trip.id}<br>
+                        <strong>Pickup:</strong> ${trip.pickupCoordinates.lat.toFixed(4)}, ${trip.pickupCoordinates.lng.toFixed(4)}<br>
+                        <strong>Destination:</strong> ${trip.distinationCoordinates.lat.toFixed(4)}, ${trip.distinationCoordinates.lng.toFixed(4)}<br>
+                        <strong>Price:</strong> ${trip.price?.toFixed(2) || '0.00'} EGP<br>
+                        <strong>Distance:</strong> ${trip.distanceKm?.toFixed(2) || '0.00'} km<br>
+                        <strong>Status:</strong> ${trip.tripStatus}<br>
+                        <strong>Payment:</strong> ${trip.paymentMethod}<br>
+                        <strong>Zone ID:</strong> ${trip.zoneId}
+                        <div class="trip-controls">
+                            ${!isAccepted && !isStarted && !isEnded ? `<button class="btn-accept" onclick="acceptTrip('${trip.id}')">Accept</button>` : ''}
+                            ${isAccepted && !isStarted && !isEnded ? `<button class="btn-start" onclick="startTrip('${trip.id}')">Start Trip</button>` : ''}
+                            ${isStarted && !isEnded ? `<button class="btn-end" onclick="endTrip('${trip.id}')">End Trip</button>` : ''}
+                        </div>
+                    `;
+
+                list.appendChild(box);
+            });
+        }
+
+        function showActiveTripInfo(trip) {
+            const infoPanel = document.getElementById('activeTripInfo');
+            const details = document.getElementById('activeTripDetails');
+            const navigation = document.getElementById('tripNavigation');
+
+            details.innerHTML = `
+                    <strong>Trip ID:</strong> ${trip.id}<br>
+                    <strong>Status:</strong> ${trip.tripStatus}<br>
+                    <strong>Price:</strong> ${trip.price?.toFixed(2) || '0.00'} EGP<br>
+                    <strong>Zone:</strong> ${trip.zoneId || 'Unknown'}<br>
+                    ${trip.pickupCoordinates ? `<strong>Pickup:</strong> ${trip.pickupCoordinates.lat.toFixed(4)}, ${trip.pickupCoordinates.lng.toFixed(4)}<br>` : ''}
+                    ${trip.distinationCoordinates ? `<strong>Destination:</strong> ${trip.distinationCoordinates.lat.toFixed(4)}, ${trip.distinationCoordinates.lng.toFixed(4)}` : ''}
+                `;
+
+            if (trip.tripStatus === 'Accepted') {
+                navigation.innerHTML = `
+                        <button class="btn-start" onclick="startTrip('${trip.id}')" style="width: 100%; margin-bottom: 5px;">Start Trip to Destination</button>
+                        <button class="btn-end" onclick="endTrip('${trip.id}')" style="width: 100%;">Cancel Trip</button>
+                    `;
+            } else if (trip.tripStatus === 'Started') {
+                navigation.innerHTML = `
+                        <button class="btn-end" onclick="endTrip('${trip.id}')" style="width: 100%;">End Trip</button>
+                    `;
+            }
+
+            infoPanel.style.display = 'block';
+        }
+
+        // Expose functions to global scope
+        window.acceptTrip = acceptTrip;
+        window.startTrip = startTrip;
+        window.endTrip = endTrip;
+        window.toggleDebug = toggleDebug;
+    </script>
+</body>
+</html>

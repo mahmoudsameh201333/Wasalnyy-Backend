@@ -5,7 +5,8 @@ namespace Wasalnyy.BLL.Service.Abstraction
 {
     public interface IZoneService
     {
-        Task<ReturnZoneDto?> GetZoneAsync(Guid zoneId);
+        Task<ReturnZoneDto?> GetByIdAsync(Guid zoneId);
+        Task<IEnumerable<ReturnZoneDto>> GetAllAsync();
         Task<ReturnZoneDto?> GetZoneAsync(Coordinates coordinate);
         Task CreateZoneAsync(CreateZoneDto dto);
         Task DeleteZoneAsync(Guid zoneId);

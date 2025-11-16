@@ -11,6 +11,7 @@ namespace Wasalnyy.DAL.Repo.Abstraction
     {
         Task<Zone?> GetByIdAsync(Guid id);
         Task<IEnumerable<Zone>> GetCandidateZonesAsync(Coordinates coordinate);
+        Task<IEnumerable<Zone>> GetAllAsync();
         Task CreateAsync(Zone zone);
         Task DeleteAsync(Guid id);
         Task UpdateAsync(Zone zone);

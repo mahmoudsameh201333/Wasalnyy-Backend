@@ -8,10 +8,10 @@ using Wasalnyy.DAL.Enum;
 
 namespace Wasalnyy.BLL.DTO.Trip
 {
-    public class RequestTripDto
-    {
-        public PaymentMethod PaymentMethod { get; set; }
-        public IEnumerable<Coordinates> PickupCoordinates { get; set; } = Enumerable.Empty<Coordinates>();
-        public IEnumerable<Coordinates> DistinationCoordinates { get; set; } = Enumerable.Empty<Coordinates>();
-    }
+        public class RequestTripDto
+        {
+            public PaymentMethod PaymentMethod { get; set; }
+            public Coordinates PickupCoordinates { get; set; }
+            public Coordinates DistinationCoordinates { get; set; }
+        }
 }

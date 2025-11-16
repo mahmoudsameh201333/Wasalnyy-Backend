@@ -6,6 +6,7 @@ namespace Wasalnyy.DAL.Repo.Abstraction
     public interface ITripRepo
     {
         Task<Trip?> GetByIdAsync(Guid id);
+        Task<Trip?> GetDriverActiveTripAsync(string driverId);
         Task<IEnumerable<Trip>> GetRequestedTripsByZoneAsync(Guid zoneId);
         Task<IEnumerable<Trip>> GetTripsPaginatedAsync(Expression<Func<Trip, object>> orderBy,
                                         bool descending = false, int pageNumber = 1, int pageSize = 10);

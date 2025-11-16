@@ -9,7 +9,11 @@ namespace Wasalnyy.BLL.EventHandlers.Abstraction
 {
     public interface IDriverNotifier
     {
-        void OnDriverStatusChanged(string driverId, DriverStatus driverStatus);
-        void OnDriverLocationUpdated(string driverId, decimal lng, decimal lat);
+
+        Task OnDriverStatusChangedToAvailable(string driverId, Guid zoneId);
+        Task OnDriverZoneChanged(string driverId, Guid? oldZoneId, Guid newZoneId);
+        Task OnDriverLocationUpdated(string driverId, Coordinates coordinates);
+        //Task OnDriverStatusChangedToInTrip(string driverId, Guid tripId);
+
     }
 }

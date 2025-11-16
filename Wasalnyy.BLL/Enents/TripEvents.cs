@@ -9,7 +9,7 @@ namespace Wasalnyy.BLL.Enents
 {
     public class TripEvents
     {
-        public delegate void TripDel(TripDto dto);
+        public delegate Task TripDel(TripDto dto);
         public event TripDel? TripRequested;
         public event TripDel? TripAccepted;
         public event TripDel? TripStarted;
@@ -21,19 +21,19 @@ namespace Wasalnyy.BLL.Enents
         }
         public void FireTripAccepted(TripDto dto)
         {
-            TripAccepted?.Invoke(dto);
+            TripAccepted?.Invoke(dto).Wait();
         }
         public void FireTripStarted(TripDto dto)
         {
-            TripStarted?.Invoke(dto);
+            TripStarted?.Invoke(dto).Wait();
         }
         public void FireTripEnded(TripDto dto)
         {
-            TripEnded?.Invoke(dto);
+            TripEnded?.Invoke(dto).Wait();
         }
         public void FireTripCanceled(TripDto dto)
         {
-            TripCanceled?.Invoke(dto);
+            TripCanceled?.Invoke(dto).Wait();
         }
     }
 }

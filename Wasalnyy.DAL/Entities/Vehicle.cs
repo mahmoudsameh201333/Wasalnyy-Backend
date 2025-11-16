@@ -14,7 +14,5 @@
 		public EngineType EngineType { get; set; }
 
 		public string DriverId { get; set; }
-		public Driver Driver { get; set; }
-
 	}
 }

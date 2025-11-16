@@ -12,6 +12,7 @@ using Wasalnyy.BLL.Service.Abstraction;
 using Wasalnyy.DAL.Entities;
 using Wasalnyy.DAL.Enum;
 using Wasalnyy.DAL.Repo.Abstraction;
+using Wasalnyy.DAL.Repo.Implementation;
 
 namespace Wasalnyy.BLL.Service.Implementation
 {
@@ -57,18 +58,20 @@ namespace Wasalnyy.BLL.Service.Implementation
             if(driver == null)
                 throw new NotFoundException($"Driver with ID '{driverId}' was not found.");
 
-            _driverEvents.FireDriverLocationUpdated(driverId, coordinate.Lng, coordinate.Lat);
-
             var zone = await _zoneService.GetZoneAsync(coordinate);
             
             if (zone == null)
                 throw new OutOfZoneException("You are out of zone.");
 
             if (driver.ZoneId != zone.Id)
-                _driverEvents.FireDriverZoneChanged(driverId, zone.Id);
+                _driverEvents.FireDriverZoneChanged(driverId, driver.ZoneId, zone.Id);
 
+            driver.Coordinates = coordinate;
             await _driverRepo.UpdateDriverZoneAsync(driverId, zone.Id);
             await _driverRepo.SaveChangesAsync();
+
+            _driverEvents.FireDriverLocationUpdated(driverId, coordinate);
+
         }
 
         public async Task SetDriverOfflineAsync(string driverId)
@@ -81,13 +84,31 @@ namespace Wasalnyy.BLL.Service.Implementation
         public async Task SetDriverInTripAsync(string driverId, Guid tripId)
         {
             await ChangeStatusAsync(driverId, DriverStatus.InTrip);
-            _driverEvents.FireDriverStatusChangedToInTrip(driverId, tripId);
+            //_driverEvents.FireDriverStatusChangedToInTrip(driverId, tripId);
         }
 
-        public async Task SetDriverAvailableAsync(string driverId)
+        public async Task SetDriverAvailableAsync(string driverId, Coordinates coordinates)
         {
-            await ChangeStatusAsync(driverId, DriverStatus.Available);
-            _driverEvents.FireDriverStatusChangedToAvailable(driverId);
+            var driver = await _driverRepo.GetByIdAsync(driverId);
+
+            if (driver == null)
+                throw new NotFoundException($"Driver with ID '{driverId}' was not found.");
+
+            //var activeTrip = await _tripService.GetDriverActiveTripAsync(driverId);
+            //if (activeTrip != null)
+            //    throw new InvalidOperationException("Cannot set available while having active trip");
+
+            var zone = await _zoneService.GetZoneAsync(coordinates);
+            if (zone == null)
+                throw new OutOfZoneException("You are out of zone.");
+
+            driver.ZoneId = zone.Id;
+            driver.DriverStatus = DriverStatus.Available;
+            driver.Coordinates = coordinates;
+            await _driverRepo.UpdateAsync(driver);
+            await _driverRepo.SaveChangesAsync();
+
+            _driverEvents.FireDriverStatusChangedToAvailable(driverId, zone.Id);
         }
     }
 }

@@ -1,15 +1,17 @@
 
-using Wasalnyy.BLL.Common;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Wasalnyy.BLL.Common;
+using Wasalnyy.BLL.Common;
+using Wasalnyy.BLL.EventHandlers.Abstraction;
 using Wasalnyy.BLL.Settings;
 using Wasalnyy.DAL.Common;
 using Wasalnyy.DAL.Database;
 using Wasalnyy.DAL.Entities;
+using Wasalnyy.PL.EventHandlers.Implementation;
 using Wasalnyy.PL.Hubs;
 namespace Wasalnyy.PL
 {
@@ -23,9 +25,10 @@ namespace Wasalnyy.PL
             {
                 options.AddPolicy("AllowAll", policy =>
                 {
-                    policy.AllowAnyOrigin()
-                          .AllowAnyMethod()
-                          .AllowAnyHeader();
+                    policy.WithOrigins("http://127.0.0.1:5500", "http://localhost:5500", "http://localhost:4200") // frontend URLs
+                            .AllowAnyHeader()
+                            .AllowAnyMethod()
+                            .AllowCredentials();
                 });
             });
 
@@ -50,6 +53,11 @@ namespace Wasalnyy.PL
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            builder.Services.AddSingleton<IDriverNotifier, DriverNotifier>();
+            builder.Services.AddSingleton<IRiderNotifier, RiderNotifier>();
+            builder.Services.AddSingleton<ITripNotifier, TripNotifier>();
+
+
             builder.Services.AddBussinessInPL(builder.Configuration);
             builder.Services.AddBussinessInDAL();
             builder.Services.AddHttpClient();
@@ -58,7 +66,7 @@ namespace Wasalnyy.PL
 
             app.UseBussinessEventSubscriptions();
 
-
+            app.UseCors("AllowAll");
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
 			using (var scope = app.Services.CreateScope())
@@ -67,8 +75,11 @@ namespace Wasalnyy.PL
 				var userManager = services.GetRequiredService<UserManager<User>>();
 				var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
-				await DbSeeder.SeedAsync(userManager, roleManager);
-			}
+                await DbSeeder.SeedAsync(userManager, roleManager);
+                
+                var connectionService = services.GetRequiredService<IWasalnyyHubConnectionService>();
+                await connectionService.DeleteAllConnectionsAsync();
+            }
 			// Configure the HTTP request pipeline.
 			if (app.Environment.IsDevelopment())
             {
@@ -78,8 +89,9 @@ namespace Wasalnyy.PL
             app.UseHttpsRedirection();
             app.UseAuthentication();
             app.UseAuthorization();
-            app.MapHub<WasalnyyHub>("/Wasalnyy");
 
+            app.UseStaticFiles();
+            app.MapHub<WasalnyyHub>("/Wasalnyy");
 
             app.MapControllers();
             app.Run();

@@ -10,40 +10,41 @@ namespace Wasalnyy.BLL.Enents
 {
     public class DriverEvents
     {
-        public delegate void DriverStatusChangedDel(string driverId);
-        public delegate void DriverStatusChangedToInTripDel(string driverId, Guid tripId);
-        public delegate void DriverLocationUpdatedDel(string driverId, decimal lng, decimal lat);
-        public delegate void DriverZoneChangedDel(string driverId, Guid zoneId);
+        public delegate Task DriverStatusChangedDel(string driverId);
+        public delegate Task DriverStatusChangedToInTripDel(string driverId, Guid tripId);
+        public delegate Task DriverLocationUpdatedDel(string driverId, Coordinates coordinate);
+        public delegate Task DriverZoneDel(string driverId, Guid zoneId);
+        public delegate Task DriverZoneChangedDel(string driverId, Guid? oldZoneId, Guid newZoneId);
 
         public event DriverStatusChangedDel? DriverStatusChangedToOffline;
-        public event DriverStatusChangedToInTripDel? DriverStatusChangedToInTrip;
-        public event DriverStatusChangedDel? DriverStatusChangedToAvailable;
+        //public event DriverStatusChangedToInTripDel? DriverStatusChangedToInTrip;
+        public event DriverZoneDel? DriverStatusChangedToAvailable;
 
         public event DriverLocationUpdatedDel? DriverLocationUpdated;
         public event DriverZoneChangedDel? DriverZoneChanged;
 
         public void FireDriverStatusChangedToOffline(string driverId)
         {
-            DriverStatusChangedToOffline?.Invoke(driverId);
+            DriverStatusChangedToOffline?.Invoke(driverId).Wait();
         }
 
-        public void FireDriverStatusChangedToInTrip(string driverId, Guid tripId)
+        //public void FireDriverStatusChangedToInTrip(string driverId, Guid tripId)
+        //{
+        //    DriverStatusChangedToInTrip?.Invoke(driverId, tripId).Wait();
+        //}
+
+        public void FireDriverStatusChangedToAvailable(string driverId, Guid zoneId)
         {
-            DriverStatusChangedToInTrip?.Invoke(driverId, tripId);
+            DriverStatusChangedToAvailable?.Invoke(driverId, zoneId).Wait();
         }
 
-        public void FireDriverStatusChangedToAvailable(string driverId)
+        public void FireDriverLocationUpdated(string driverId, Coordinates coordinate)
         {
-            DriverStatusChangedToAvailable?.Invoke(driverId);
+            DriverLocationUpdated?.Invoke(driverId, coordinate).Wait();
         }
-
-        public void FireDriverLocationUpdated(string driverId, decimal lng, decimal lat)
+        public void FireDriverZoneChanged(string driverId, Guid? oldZoneId, Guid newZoneId)
         {
-            DriverLocationUpdated?.Invoke(driverId, lng, lat);
-        }
-        public void FireDriverZoneChanged(string driverId, Guid zoneId)
-        {
-            DriverZoneChanged?.Invoke(driverId, zoneId);
+            DriverZoneChanged?.Invoke(driverId, oldZoneId, newZoneId).Wait();
         }
     }
 }
