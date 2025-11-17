@@ -57,6 +57,37 @@ namespace Wasalnyy.PL.Controllers
 
 			return Ok(result.Message);
 		}
+		[HttpPost("register/driver-face")]
+		public async Task<IActionResult> RegisterDriverFace([FromForm] RegisterDriverFaceRequestDto model)
+		{
+			if (model.FaceImage == null || model.FaceImage.Length == 0)
+				return BadRequest("Face image is required.");
 
+			using var ms = new MemoryStream();
+			await model.FaceImage.CopyToAsync(ms);
+
+			var result = await _authService.RegisterDriverFaceAsync(model.DriverId, ms.ToArray());
+
+			if (!result.Success)
+				return BadRequest(result.Message);
+
+			return Ok(result.Message);
+		}
+		[HttpPost("login/driver-face")]
+		public async Task<IActionResult> FaceLogin([FromForm] FaceLoginRequestDto model)
+		{
+			if (model.FaceImage == null || model.FaceImage.Length == 0)
+				return BadRequest("Face image is required.");
+
+			using var ms = new MemoryStream();
+			await model.FaceImage.CopyToAsync(ms);
+
+			var result = await _authService.FaceLoginAsync(ms.ToArray());
+
+			if (!result.Success)
+				return Unauthorized(result.Message);
+
+			return Ok(new { result.Message, result.Token });
+		}
 	}
 }

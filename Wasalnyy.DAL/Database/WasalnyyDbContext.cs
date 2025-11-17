@@ -19,6 +19,7 @@
         public DbSet<Review> Reviews {  get; set; }
         public DbSet<Trip> Trips {  get; set; }
         public DbSet<Zone> Zones {  get; set; }
+		public DbSet<UserFaceData> UserFaceData { get; set; }
 
     }
 }

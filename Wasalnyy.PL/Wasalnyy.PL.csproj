@@ -7,6 +7,34 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="C:\Users\LENOVO\.nuget\packages\facerecognitiondotnet\1.3.0.7\build\..\runtimes\win-AnyCPU\native\DlibDotNetNativeDnnAgeClassification.dll" />
+    <Content Remove="C:\Users\LENOVO\.nuget\packages\facerecognitiondotnet\1.3.0.7\build\..\runtimes\win-AnyCPU\native\DlibDotNetNativeDnnGenderClassification.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="models\dlib_face_recognition_resnet_model_v1.dat" />
+    <None Remove="models\mmod_human_face_detector.dat" />
+    <None Remove="models\shape_predictor_5_face_landmarks.dat" />
+    <None Remove="models\shape_predictor_68_face_landmarks.dat" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="models\dlib_face_recognition_resnet_model_v1.dat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="models\mmod_human_face_detector.dat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="models\shape_predictor_5_face_landmarks.dat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="models\shape_predictor_68_face_landmarks.dat">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FaceRecognitionDotNet" Version="1.3.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.10" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.10">

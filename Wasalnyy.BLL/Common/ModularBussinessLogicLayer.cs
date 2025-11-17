@@ -36,6 +36,7 @@ namespace Wasalnyy.BLL.Common
             services.AddSingleton<IDriverNotifier, DriverNotifier>();
             services.AddSingleton<IRiderNotifier, RiderNotifier>();
             services.AddSingleton<ITripNotifier, TripNotifier>();
+            services.AddSingleton<IFaceService, FaceService>();
 
 
 			services.Configure<JwtSettings>(configuration.GetSection("JwtSettings"));

@@ -1,9 +1,7 @@
-﻿using Azure.Core;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
-using System;
-using Wasalnyy.BLL.JwtHandling;
-using Wasalnyy.DAL.Entities;
+using Wasalnyy.BLL.Helper;
+using Wasalnyy.DAL.Repo.Abstraction;
 
 namespace Wasalnyy.BLL.Service.Implementation
 {
@@ -14,19 +12,24 @@ namespace Wasalnyy.BLL.Service.Implementation
 		private readonly SignInManager<User> _signInManager;
 		private readonly IEmailService _emailService;
 		private readonly string BaseUrl;
-
+		private readonly IFaceService _faceService;
+		private readonly IUserFaceDataRepo _faceRepo;
 		public AuthService(
 			UserManager<User> userManager,
 			JwtHandler jwtHandler,
 			SignInManager<User> signInManager,
 			IEmailService emailService,
-			IConfiguration config)
+			IConfiguration config,
+			IFaceService faceService,
+			IUserFaceDataRepo faceRepo)
 		{
 			_userManager = userManager;
 			_jwtHandler = jwtHandler;
 			_signInManager = signInManager;
 			_emailService = emailService;
 			BaseUrl = config["BaseUrl"]!;
+			_faceRepo = faceRepo;
+			_faceService = faceService;
 		}
 		public async Task<AuthResult> RegisterDriverAsync(RegisterDriverDto dto)
 		{
@@ -140,6 +143,62 @@ namespace Wasalnyy.BLL.Service.Implementation
 			{
 				return new AuthResult { Success = false, Message = ex.Message };
 			}
+		}
+		public async Task<AuthResult> RegisterDriverFaceAsync(string driverId, byte[] faceImage)
+		{
+			var driver = await _userManager.FindByIdAsync(driverId);
+			if (driver == null)
+				return new AuthResult { Success = false, Message = "Driver not found" };
+			double[] embedding;
+			try
+			{
+				embedding = _faceService.ExtractEmbedding(faceImage);
+			}
+			catch
+			{
+				return new AuthResult { Success = false, Message = "No face detected" };
+			}
+			var faceData = new UserFaceData
+			{
+				DriverId = driver.Id,
+				Embedding = EmbeddingSerializer.DoubleArrayToBytes(embedding)
+			};
+			await _faceRepo.AddAsync(faceData);
+			return new AuthResult { Success = true, Message = "Face registered successfully" };
+		}
+		public async Task<AuthResult> FaceLoginAsync(byte[] faceImage)
+		{
+			double[] incomingEmbedding;
+			try
+			{
+				incomingEmbedding = _faceService.ExtractEmbedding(faceImage);
+			}
+			catch
+			{
+				return new AuthResult { Success = false, Message = "No face detected in image" };
+			}
+
+			var drivers = await _faceRepo.GetAllDriversAsync();
+			User? matchedUser = null;
+			double bestDistance = double.MaxValue;
+			foreach (var d in drivers)
+			{
+				double[] storedEmbedding = EmbeddingSerializer.BytesToDoubleArray(d.Embedding);
+				double distance = _faceService.CompareEmbeddings(storedEmbedding, incomingEmbedding);
+				if (distance < bestDistance)
+				{
+					bestDistance = distance;
+					matchedUser = d.Driver;
+				}
+			}
+			const double THRESHOLD = 0.6; // tune this
+			if (matchedUser != null && bestDistance <= THRESHOLD)
+			{
+				await _signInManager.SignInAsync(matchedUser, isPersistent: false);
+				var token = await _jwtHandler.GenerateToken(matchedUser);
+				return new AuthResult { Success = true, Message = "Face login successful", Token = token };
+			}
+			return new AuthResult { Success = false, Message = "Face not recognized" };
 		}
 	}
 }

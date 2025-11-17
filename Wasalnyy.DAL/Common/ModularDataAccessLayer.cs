@@ -12,6 +12,7 @@ namespace Wasalnyy.DAL.Common
             services.AddScoped<IRiderRepo, RiderRepo>();
             services.AddScoped<ITripRepo, TripRepo>();
             services.AddScoped<IZoneRepo, ZoneRepo>();
+            services.AddScoped<IUserFaceDataRepo, UserFaceDataRepo>();
             return services;
         }
     }
