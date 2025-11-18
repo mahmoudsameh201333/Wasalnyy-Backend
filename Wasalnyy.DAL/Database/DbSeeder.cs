@@ -26,6 +26,7 @@
 					FullName = "System Admin",
 					PhoneNumber = "15555222",
 					DateOfBirth = DateTime.Now,
+					CreatedAt = DateTime.Now,
 					Gender = Gender.Male,
 					EmailConfirmed = true
 				};

@@ -75,11 +75,11 @@ namespace Wasalnyy.PL.Controllers
 			if (!result.Success)
 				return BadRequest(result.Message);
 
-			return Ok(result.Message);
+			return Ok(new { message=result.Message });
 		}
 		[HttpPost("login/driver-face")]
-		[Consumes("multipart/form-data")]
-		public async Task<IActionResult> FaceLogin([FromForm] FaceLoginRequestDto model)
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> FaceLogin([FromForm] FaceLoginRequestDto model)
 		{
 			if (model.FaceImage == null || model.FaceImage.Length == 0)
 				return BadRequest("Face image is required.");

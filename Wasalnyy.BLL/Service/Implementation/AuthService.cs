@@ -98,7 +98,16 @@ namespace Wasalnyy.BLL.Service.Implementation
 
 		public async Task<AuthResult> RegisterRiderAsync(RegisterRiderDto dto)
 		{
-			var rider = new Rider
+            var existingUser = await _userManager.FindByEmailAsync(dto.Email);
+            if (existingUser != null)
+            {
+                return new AuthResult
+                {
+                    Success = false,
+                    Message = "Email is already registered"
+                };
+            }
+            var rider = new Rider
 			{
 				UserName = dto.Email,
 				Email = dto.Email,

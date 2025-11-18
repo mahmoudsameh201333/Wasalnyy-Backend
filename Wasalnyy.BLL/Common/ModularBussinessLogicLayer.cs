@@ -27,6 +27,7 @@ namespace Wasalnyy.BLL.Common
             services.AddScoped<IRiderService, RiderService>();
             services.AddScoped<IRouteService, RouteService>();
             services.AddScoped<IAdminService, AdminService>();
+            services.AddScoped<IPaymentService, PaymentService>();
 
 
 
