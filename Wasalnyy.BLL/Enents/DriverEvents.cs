@@ -10,13 +10,14 @@ namespace Wasalnyy.BLL.Enents
 {
     public class DriverEvents
     {
-        public delegate Task DriverStatusChangedDel(string driverId);
+        public delegate Task DriverDel(string driverId);
         public delegate Task DriverStatusChangedToInTripDel(string driverId, Guid tripId);
         public delegate Task DriverLocationUpdatedDel(string driverId, Coordinates coordinate);
         public delegate Task DriverZoneDel(string driverId, Guid zoneId);
         public delegate Task DriverZoneChangedDel(string driverId, Guid? oldZoneId, Guid newZoneId);
 
-        public event DriverStatusChangedDel? DriverStatusChangedToOffline;
+        public event DriverDel? DriverStatusChangedToOffline;
+        public event DriverDel? DriverOutOfZone;
         //public event DriverStatusChangedToInTripDel? DriverStatusChangedToInTrip;
         public event DriverZoneDel? DriverStatusChangedToAvailable;
 
@@ -26,6 +27,10 @@ namespace Wasalnyy.BLL.Enents
         public void FireDriverStatusChangedToOffline(string driverId)
         {
             DriverStatusChangedToOffline?.Invoke(driverId).Wait();
+        }
+        public void FireDriverOutOfZone(string driverId)
+        {
+            DriverOutOfZone?.Invoke(driverId).Wait();
         }
 
         //public void FireDriverStatusChangedToInTrip(string driverId, Guid tripId)

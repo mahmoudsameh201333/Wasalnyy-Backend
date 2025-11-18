@@ -16,6 +16,7 @@ namespace Wasalnyy.BLL.Service.Abstraction
 
         Task<IEnumerable<TripDto>> GetByRequestedTripsByZoneAsync(Guid zoneId);
         Task<TripDto?> GetDriverActiveTripAsync(string driverId);
+        Task<TripDto?> GetRiderActiveTripAsync(string riderId);
         Task<TripPaginationDto> GetAllPaginatedAsync(Expression<Func<Trip, object>> orderBy,
                                         bool descending = false, int pageNumber = 1, int pageSize = 10);
         Task<TripPaginationDto> GetAllRiderTripsPaginatedAsync(string riderId, Expression<Func<Trip, object>> orderBy,
@@ -27,10 +28,5 @@ namespace Wasalnyy.BLL.Service.Abstraction
         Task AcceptTripAsync(string driverId, Guid tripId);
         Task StartTripAsync(string driverId, Guid tripId);
         Task EndTripAsync(string driverId, Guid tripId);
-
-        Task<int> GetPagesCountAsync(int pageSize = 10);
-        Task<int> GetRiderTripsPagesCountAsync(string riderId, int pageSize = 10);
-        Task<int> GetDriverTripsPagesCountAsync(string driverId, int pageSize = 10);
-
     }
 }

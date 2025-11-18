@@ -8,6 +8,7 @@ using Wasalnyy.BLL.Mapper;
 using Wasalnyy.BLL.Service.Abstraction;
 using Wasalnyy.BLL.Service.Implementation;
 using Wasalnyy.BLL.Settings;
+using Wasalnyy.BLL.Validators;
 
 namespace Wasalnyy.BLL.Common
 {
@@ -27,6 +28,8 @@ namespace Wasalnyy.BLL.Common
             services.AddScoped<IRouteService, RouteService>();
             services.AddScoped<IWasalnyyHubConnectionService, WasalnyyHubConnectionService>();
 
+            services.AddScoped<DriverServiceValidator>();
+            services.AddScoped<TripServiceValidator>();
 
 
             // Register events and notifiers
@@ -89,6 +92,8 @@ namespace Wasalnyy.BLL.Common
             driverEvents.DriverStatusChangedToAvailable += driverHandler.OnDriverStatusChangedToAvailable;
             driverEvents.DriverZoneChanged += driverHandler.OnDriverZoneChanged;
             driverEvents.DriverLocationUpdated += driverHandler.OnDriverLocationUpdated;
+            driverEvents.DriverOutOfZone += driverHandler.OnDriverOutOfZone;
+            driverEvents.DriverStatusChangedToOffline += driverHandler.OnDriverStatusChangedToOffline;
             //driverEvents.DriverStatusChangedToInTrip += driverHandler.OnDriverStatusChangedToInTrip;
 
             return app;

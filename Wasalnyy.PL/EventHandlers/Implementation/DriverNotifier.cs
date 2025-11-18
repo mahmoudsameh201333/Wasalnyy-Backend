@@ -63,18 +63,22 @@ namespace Wasalnyy.PL.EventHandlers.Implementation
             }
         }
 
-        //public async Task OnDriverStatusChangedToInTrip(string driverId, Guid tripId)
-        //{
-        //    var _connectionService = _serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<IWasalnyyHubConnectionService>();
+        public async Task OnDriverStatusChangedToOffline(string driverId)
+        {
+            var _connectionService = _serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<IWasalnyyHubConnectionService>();
+            var conId = (await _connectionService.GetAllUserConnectionsAsync(driverId)).FirstOrDefault();
 
-        //    var conId = (await _connectionService.GetAllUserConnectionsAsync(driverId)).FirstOrDefault();
+            if (conId != null) 
+            {
+                var _driverService = _serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<IDriverService>();
 
-        //    if(conId != null) 
-        //    {
-        //        await _hubContext.Groups.AddToGroupAsync(conId, $"trip_{tripId}");
+                var driver = await _driverService.GetByIdAsync(driverId);
+                if (driver != null && driver.ZoneId != null)
+                    await _hubContext.Groups.RemoveFromGroupAsync(conId, $"driversAvailableInZone_{driver.ZoneId}");
+                await _connectionService.DeleteAsync(conId);
+            }
 
-        //    }
-        //}
+        }
 
         public async Task OnDriverZoneChanged(string driverId, Guid? oldZoneId, Guid newZoneId)
         {
@@ -98,6 +102,16 @@ namespace Wasalnyy.PL.EventHandlers.Implementation
                 }
             }
 
-        }        
+        }
+        public async Task OnDriverOutOfZone(string driverId)
+        {
+            var _connectionService = _serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<IWasalnyyHubConnectionService>();
+            var conId = (await _connectionService.GetAllUserConnectionsAsync(driverId)).FirstOrDefault();
+
+            if(conId != null)
+            {
+                await _hubContext.Clients.Client(conId).SendAsync("outOfZone", "You are out of zone");
+            }
+        }
     }
 }
