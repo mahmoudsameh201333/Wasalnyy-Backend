@@ -17,3 +17,5 @@ global using Microsoft.Extensions.Configuration;
 global using Microsoft.Extensions.DependencyInjection;
 global using Wasalnyy.BLL.JwtHandling;
 global using Wasalnyy.BLL.Service.Implementation;
+global using Wasalnyy.BLL.DTO.Update;
+

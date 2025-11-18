@@ -9,6 +9,10 @@ namespace Wasalnyy.DAL.Repo.Abstraction
     public interface IRiderRepo
     {
         Task<Rider?> GetByIdAsync(string driverId);
+        Task<IEnumerable<Rider>> GetAllRidersAsync();
+
+        Task<Rider?> GetByPhoneAsync(string phonenum);
+         Task<int> GetCountAsync();
 
     }
 }

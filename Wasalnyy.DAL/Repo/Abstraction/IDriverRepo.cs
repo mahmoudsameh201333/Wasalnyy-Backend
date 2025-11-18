@@ -16,5 +16,8 @@ namespace Wasalnyy.DAL.Repo.Abstraction
         Task<IEnumerable<Driver>> GetAvailableDriversByZoneAsync(Guid zoneId);
         Task UpdateDriverZoneAsync(string driverId, Guid zoneId);
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+        Task<IEnumerable<Driver>> GetAllDriverAsync();
+        Task<Driver> GetDriverByLicense(string licen);
+        Task<int> GetCountAsync();
     }
 }

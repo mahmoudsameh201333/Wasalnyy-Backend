@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Wasalnyy.BLL.DTO.Update;
 
 namespace Wasalnyy.BLL.Mapper
 {
@@ -6,7 +7,9 @@ namespace Wasalnyy.BLL.Mapper
     {
         public DomainProfile()
         {
-            
+         CreateMap<UpdateRider,Rider>().ReverseMap();
+            CreateMap<UpdateDriver, Driver>().ReverseMap();
+
 
         }
     }

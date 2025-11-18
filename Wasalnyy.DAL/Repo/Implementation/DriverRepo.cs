@@ -67,5 +67,30 @@ namespace Wasalnyy.DAL.Repo.Implementation
                 _context.Entry(driver).State = EntityState.Modified;
             }
         }
+
+        public async Task<IEnumerable<Driver>> GetAllDriverAsync()
+        {
+            return await _context.Drivers
+                .AsNoTracking()
+                .ToListAsync();
+        }
+        public async Task<Driver> GetDriverByLicense(string licen)
+        {
+
+            var Driver = await _context.Drivers.SingleOrDefaultAsync(e => e.License == licen);
+            if (Driver != null)
+            {
+                return Driver;
+            }
+            else return null;
+        }
+        public async Task<int> GetCountAsync()
+        {
+            return await _context.Drivers
+                .AsNoTracking()
+                .CountAsync(d=>d.IsDeleted==false);
+        }
+
+
     }
 }

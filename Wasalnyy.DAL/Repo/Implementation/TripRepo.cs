@@ -122,5 +122,20 @@ namespace Wasalnyy.DAL.Repo.Implementation
         {
             return await _context.Trips.AsNoTracking().CountAsync(x => x.DriverId == driverId);
         }
+
+        public async Task<IEnumerable<Trip>> GetTripsByStatusAsync(TripStatus status)
+        {
+            return await _context.Trips
+                .AsNoTracking() 
+                .Where(t => t.TripStatus == status)
+                .Include(t => t.Driver)
+                .Include(t => t.Rider)
+                .ToListAsync();
+        }
+
+        public Task<double> GetTripDurationAsync(Guid id)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

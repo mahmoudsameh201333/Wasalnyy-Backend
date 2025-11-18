@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,5 +23,24 @@ namespace Wasalnyy.DAL.Repo.Implementation
             return await _context.Riders.AsNoTracking()
                 .SingleOrDefaultAsync(x => x.Id == driverId);
         }
+        public async Task<IEnumerable<Rider>> GetAllRidersAsync()
+        {
+            return await _context.Riders
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
+        public Task<Rider?> GetByPhoneAsync(string phonenum)
+        {
+            var RiderByPhone=_context.Riders.FirstOrDefaultAsync(e=>e.PhoneNumber == phonenum);
+            return RiderByPhone;
+        }
+        public async Task<int> GetCountAsync()
+        {
+            return await _context.Riders
+                .AsNoTracking()
+                .CountAsync(r=>r.IsDeleted==false);
+        }
+
     }
 }
