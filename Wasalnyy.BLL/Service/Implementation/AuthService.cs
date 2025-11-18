@@ -49,6 +49,7 @@ namespace Wasalnyy.BLL.Service.Implementation
 				FullName = dto.FullName,
 				PhoneNumber = dto.PhoneNumber,
 				License = dto.License,
+				CreatedAt = DateTime.Now,
 				Vehicle = new Vehicle
 				{
 					Make = dto.Vehicle.Make,
