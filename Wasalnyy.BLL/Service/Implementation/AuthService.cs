@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Wasalnyy.BLL.Helper;
+using Wasalnyy.DAL.Entities;
 using Wasalnyy.DAL.Repo.Abstraction;
 
 namespace Wasalnyy.BLL.Service.Implementation
@@ -42,6 +43,17 @@ namespace Wasalnyy.BLL.Service.Implementation
 					Message = "Email is already registered"
 				};
 			}
+			var licenseExists = _userManager.Users.OfType<Driver>().Any(d => d.License == dto.License);
+			if (licenseExists)
+				return new AuthResult { Success = false, Message = "License is already registered" };
+
+			var plateExists = _userManager.Users.OfType<Driver>().Any(d => d.Vehicle.PlateNumber == dto.Vehicle.PlateNumber);
+			if (plateExists)
+				return new AuthResult { Success = false, Message = "Vehicle plate number already exists" };
+
+			if (dto.Vehicle.Year < 1990 || dto.Vehicle.Year > DateTime.Now.Year)
+				return new AuthResult { Success = false, Message = "Invalid vehicle year" };
+
 			var driver = new Driver
 			{
 				UserName = dto.Email,
@@ -49,6 +61,9 @@ namespace Wasalnyy.BLL.Service.Implementation
 				FullName = dto.FullName,
 				PhoneNumber = dto.PhoneNumber,
 				License = dto.License,
+				CreatedAt = DateTime.UtcNow,
+				DateOfBirth = dto.DateOfBirth,
+				Gender = dto.Gender,
 				Vehicle = new Vehicle
 				{
 					Make = dto.Vehicle.Make,
@@ -67,9 +82,18 @@ namespace Wasalnyy.BLL.Service.Implementation
 			if (!result.Succeeded)
 				return new AuthResult { Success = false, Message = string.Join(", ", result.Errors.Select(e => e.Description)) };
 
+			var token = await _userManager.GenerateEmailConfirmationTokenAsync(driver);
+			var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+			var confirmationLink = $"{BaseUrl}/api/auth/confirm-email?userId={driver.Id}&token={encodedToken}";
+			await _emailService.SendEmail(
+				driver.Email,
+				"Confirm your email",
+				$"Please confirm your account: <a href='{confirmationLink}'>Click here</a>"
+			);
+
 			await _userManager.AddToRoleAsync(driver, "Driver");
-			var token = await _jwtHandler.GenerateToken(driver);
-			return new AuthResult { Success = true, Message = "Driver registered successfully", Token = token, DriverId= driver.Id };
+			var jwt_token = await _jwtHandler.GenerateToken(driver);
+			return new AuthResult { Success = true, Message = "Driver registered successfully", Token = jwt_token, DriverId = driver.Id };
 		}
 
 		public async Task<AuthResult> RegisterRiderAsync(RegisterRiderDto dto)
@@ -80,6 +104,9 @@ namespace Wasalnyy.BLL.Service.Implementation
 				Email = dto.Email,
 				FullName = dto.FullName,
 				PhoneNumber = dto.PhoneNumber,
+				CreatedAt = DateTime.UtcNow,
+				DateOfBirth = dto.DateOfBirth,
+				Gender = dto.Gender,
 				Provider = dto.Provider
 			};
 
@@ -90,14 +117,14 @@ namespace Wasalnyy.BLL.Service.Implementation
 					Success = false,
 					Message = string.Join(", ", result.Errors.Select(e => e.Description))
 				};
-			
+
 			// Generate email confirmation token
 			var token = await _userManager.GenerateEmailConfirmationTokenAsync(rider);
 			var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
 			var confirmationLink = $"{BaseUrl}/api/auth/confirm-email?userId={rider.Id}&token={encodedToken}";
 			await _emailService.SendEmail(
 				rider.Email,
-				"Confirm your email",
+				"WasalnyyUber App  ---- Confirm your email",
 				$"Please confirm your account: <a href='{confirmationLink}'>Click here</a>"
 			);
 

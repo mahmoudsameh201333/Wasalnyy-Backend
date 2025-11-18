@@ -7,6 +7,8 @@
 		public string PhoneNumber { get; set; }
 		public string Password { get; set; }
 		public string License { get; set; }
+		public DateTime DateOfBirth { get; set; }
+		public Gender Gender {get; set;}
 		public VehicleDto Vehicle { get; set; }
 	}
 }
