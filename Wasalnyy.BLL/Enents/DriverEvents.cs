@@ -16,17 +16,16 @@ namespace Wasalnyy.BLL.Enents
         public delegate Task DriverZoneDel(string driverId, Guid zoneId);
         public delegate Task DriverZoneChangedDel(string driverId, Guid? oldZoneId, Guid newZoneId);
 
-        public event DriverDel? DriverStatusChangedToOffline;
+        public event DriverDel? DriverStatusChangedToUnAvailable;
         public event DriverDel? DriverOutOfZone;
-        //public event DriverStatusChangedToInTripDel? DriverStatusChangedToInTrip;
         public event DriverZoneDel? DriverStatusChangedToAvailable;
 
         public event DriverLocationUpdatedDel? DriverLocationUpdated;
         public event DriverZoneChangedDel? DriverZoneChanged;
 
-        public void FireDriverStatusChangedToOffline(string driverId)
+        public void FireDriverStatusChangedToUnAvailable(string driverId)
         {
-            DriverStatusChangedToOffline?.Invoke(driverId).Wait();
+            DriverStatusChangedToUnAvailable?.Invoke(driverId).Wait();
         }
         public void FireDriverOutOfZone(string driverId)
         {

@@ -24,7 +24,7 @@ namespace Wasalnyy.PL.Middleware
             {
                 int statusCode;
                 string errorType;
-                context.Response.ContentType = "application/json";
+                
 
                 switch (ex)
                 {
@@ -36,6 +36,7 @@ namespace Wasalnyy.PL.Middleware
                     case OutOfZoneException:
                     case DriverMismatchException:
                     case AlreadyAvailableException:
+                    case NotConnectedOnHubException:
                         statusCode = StatusCodes.Status400BadRequest;
                         errorType = "Bad Request";
                         break;
@@ -76,6 +77,9 @@ namespace Wasalnyy.PL.Middleware
                 {
                     StatusCode = statusCode
                 });
+
+                context.Response.ContentType = "application/json";
+                context.Response.StatusCode = statusCode;
 
                 await context.Response.WriteAsync(json);
             }

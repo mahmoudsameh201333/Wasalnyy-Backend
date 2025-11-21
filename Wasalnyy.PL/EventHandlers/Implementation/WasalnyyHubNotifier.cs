@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 using Wasalnyy.BLL.EventHandlers.Abstraction;
 using Wasalnyy.BLL.Exceptions;
 using Wasalnyy.DAL.Entities;
+using Wasalnyy.DAL.Enum;
 using Wasalnyy.PL.Hubs;
 
 namespace Wasalnyy.PL.EventHandlers.Implementation
@@ -44,7 +45,15 @@ namespace Wasalnyy.PL.EventHandlers.Implementation
                     await _hubContext.Groups.AddToGroupAsync(connectionId, $"trip_{activeTrip.Id}");
                     await _hubContext.Clients.Client(connectionId).SendAsync("pendingTrip", activeTrip);
                 }
-                return;
+                else
+                {
+                    var _driverService = _serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<IDriverService>();
+                    var driver = await _driverService.GetByIdAsync(userId);
+
+                    if (driver != null && driver.DriverStatus == DriverStatus.Available)
+                        await _driverService.SetDriverUnAvailableAsync(userId);
+                }
+                    return;
             }
             else if (roles.Contains("Rider"))
             {
@@ -68,6 +77,28 @@ namespace Wasalnyy.PL.EventHandlers.Implementation
         public async Task OnUserDisconnected(string connectionId)
         {
             var _connectionService = _serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<IWasalnyyHubService>();
+            var userId = await _connectionService.GetUserIdAsync(connectionId);
+
+
+            var _userManager = _serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<UserManager<User>>();
+
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+                throw new UnauthorizedAccessException();
+
+            var roles = await _userManager.GetRolesAsync(user);
+
+
+            if (roles.Contains("Driver"))
+            {
+                var _driverService = _serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<IDriverService>();
+                var driver = await _driverService.GetByIdAsync(userId);
+
+                if(driver != null && driver.DriverStatus == DriverStatus.Available)
+                    await _driverService.SetDriverUnAvailableAsync(userId);
+            }
+
             await _connectionService.DeleteConnectionAsync(connectionId);
 
         }

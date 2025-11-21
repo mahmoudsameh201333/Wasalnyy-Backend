@@ -81,7 +81,7 @@ namespace Wasalnyy.BLL.Service.Implementation
             _driverEvents.FireDriverLocationUpdated(driverId, coordinates);
         }
 
-        public async Task SetDriverOfflineAsync(string driverId)
+        public async Task SetDriverUnAvailableAsync(string driverId)
         {
             _validator.ValidateSetDriverOffline(driverId);
 
@@ -90,18 +90,18 @@ namespace Wasalnyy.BLL.Service.Implementation
             if (driver == null)
                 throw new NotFoundException($"Driver with ID '{driverId}' was not found.");
 
-            if(driver.DriverStatus == DriverStatus.Offline)
+            if(driver.DriverStatus == DriverStatus.UnAvailable)
                 return;
 
             if (driver.DriverStatus != DriverStatus.Available)
                 throw new AlreadyInTripException($"Driver with id {driverId} already in trip.");
 
-            driver.DriverStatus = DriverStatus.Offline;
+            driver.DriverStatus = DriverStatus.UnAvailable;
 
             await _driverRepo.UpdateAsync(driver);
             await _driverRepo.SaveChangesAsync();
 
-            _driverEvents.FireDriverStatusChangedToOffline(driverId);
+            _driverEvents.FireDriverStatusChangedToUnAvailable(driverId);
         }
 
 
@@ -115,7 +115,7 @@ namespace Wasalnyy.BLL.Service.Implementation
             if (driver == null)
                 throw new NotFoundException($"Driver with ID '{driverId}' was not found.");
 
-            if (driver.DriverStatus == DriverStatus.Offline)
+            if (driver.DriverStatus == DriverStatus.UnAvailable)
                 throw new DriverIsOfflineException($"Driver with ID '{driverId}'is offline.");
 
             if (driver.DriverStatus != DriverStatus.Available)

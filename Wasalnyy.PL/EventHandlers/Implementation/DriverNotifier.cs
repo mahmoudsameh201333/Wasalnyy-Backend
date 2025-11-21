@@ -38,7 +38,7 @@ namespace Wasalnyy.PL.EventHandlers.Implementation
                 {
                     if(trip.TripStatus == TripStatus.Accepted)
                     {
-                        await _hubContext.Clients.Groups($"trip_{trip.Id}").SendAsync("yourDriverLocationUpdated", coordinates);
+                        await _hubContext.Clients.GroupExcept($"trip_{trip.Id}", conId).SendAsync("yourDriverLocationUpdated", coordinates);
                     }
                     else
                     {
@@ -69,7 +69,7 @@ namespace Wasalnyy.PL.EventHandlers.Implementation
             }
         }
 
-        public async Task OnDriverStatusChangedToOffline(string driverId)
+        public async Task OnDriverStatusChangedToUnAvailable(string driverId)
         {
             var _connectionService = _serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<IWasalnyyHubService>();
             var conId = (await _connectionService.GetAllUserConnectionsAsync(driverId)).FirstOrDefault();

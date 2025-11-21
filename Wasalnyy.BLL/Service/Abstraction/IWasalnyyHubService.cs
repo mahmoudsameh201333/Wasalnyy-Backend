@@ -9,6 +9,7 @@ namespace Wasalnyy.BLL.Service.Abstraction
     public interface IWasalnyyHubService
     {
         Task<IEnumerable<string>> GetAllUserConnectionsAsync(string userId);
+        Task<string?> GetUserIdAsync(string signalRConnectionId);
         Task CreateConnectionAsync(WasalnyyHubConnection connection);
         Task DeleteConnectionAsync(string signalRConnectionId);
         Task DeleteAllConnectionsAsync();

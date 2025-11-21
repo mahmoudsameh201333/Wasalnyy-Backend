@@ -40,9 +40,14 @@ namespace Wasalnyy.DAL.Repo.Implementation
             return await _context.WasalnyyHubConnections.Where(x=> x.UserId == userId).Select(x=> x.SignalRConnectionId).ToListAsync();
         }
 
+        public async Task<string?> GetUserIdAsync(string signalRConnectionId)
+        {
+            return (await _context.WasalnyyHubConnections.SingleOrDefaultAsync(x => x.SignalRConnectionId == signalRConnectionId))?.UserId;
+        }
+
         public async Task<bool> IsOnlineAsync(string userId)
         {
-            return (await _context.WasalnyyHubConnections.SingleOrDefaultAsync(x=> x.UserId == userId)) != null;
+            return (await _context.WasalnyyHubConnections.AnyAsync(x=> x.UserId == userId));
         }
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

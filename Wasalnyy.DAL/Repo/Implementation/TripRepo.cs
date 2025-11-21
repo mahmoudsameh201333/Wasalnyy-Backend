@@ -81,7 +81,7 @@ namespace Wasalnyy.DAL.Repo.Implementation
 
         public async Task<Trip?> GetByIdAsync(Guid id)
         {
-            return await _context.Trips.AsNoTracking()
+            return await _context.Trips
                 .Include(x => x.Driver)
                 .Include(x => x.Rider)
                 .Include(x => x.Zone)

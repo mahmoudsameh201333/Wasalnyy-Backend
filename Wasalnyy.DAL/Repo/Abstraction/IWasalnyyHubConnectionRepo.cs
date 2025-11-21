@@ -14,6 +14,6 @@ namespace Wasalnyy.DAL.Repo.Abstraction
         Task DeleteAllConnectionsAsync();
         Task<bool> IsOnlineAsync(string userId);
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
-
+        Task<string?> GetUserIdAsync(string signalRConnectionId);
     }
 }

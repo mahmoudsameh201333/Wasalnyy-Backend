@@ -11,7 +11,7 @@ namespace Wasalnyy.BLL.Service.Abstraction
 {
     public interface IDriverService
     {
-        Task SetDriverOfflineAsync(string driverId);
+        Task SetDriverUnAvailableAsync(string driverId);
         Task SetDriverInTripAsync(string driverId);
         Task SetDriverAvailableAsync(string driverId, Coordinates coordinates);
         Task UpdateLocationAsync(string driverId, Coordinates coordinate);

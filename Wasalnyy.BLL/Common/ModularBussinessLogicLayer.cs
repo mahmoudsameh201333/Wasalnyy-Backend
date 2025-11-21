@@ -101,7 +101,7 @@ namespace Wasalnyy.BLL.Common
             driverEvents.DriverZoneChanged += driverHandler.OnDriverZoneChanged;
             driverEvents.DriverLocationUpdated += driverHandler.OnDriverLocationUpdated;
             driverEvents.DriverOutOfZone += driverHandler.OnDriverOutOfZone;
-            driverEvents.DriverStatusChangedToOffline += driverHandler.OnDriverStatusChangedToOffline;
+            driverEvents.DriverStatusChangedToUnAvailable += driverHandler.OnDriverStatusChangedToUnAvailable;
             //driverEvents.DriverStatusChangedToInTrip += driverHandler.OnDriverStatusChangedToInTrip;
 
 

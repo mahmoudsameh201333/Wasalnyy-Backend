@@ -1,7 +1,8 @@
 
-using Microsoft.AspNetCore.Authentication.Cookies;
 using FaceRecognitionDotNet;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Wasalnyy.BLL.Common;
@@ -13,6 +14,7 @@ using Wasalnyy.DAL.Common;
 using Wasalnyy.DAL.Database;
 using Wasalnyy.DAL.Entities;
 using Wasalnyy.PL.EventHandlers.Implementation;
+using Wasalnyy.PL.Filters;
 using Wasalnyy.PL.Hubs;
 using Wasalnyy.PL.Middleware;
 namespace Wasalnyy.PL
@@ -35,9 +37,13 @@ namespace Wasalnyy.PL
 
 			// Add services to the container.
 			builder.Services.AddControllers();
-			builder.Services.AddSignalR();
 
-			builder.Services.AddDbContext<WasalnyyDbContext>(options =>
+            builder.Services.AddSignalR(options =>
+            {
+                options.AddFilter<SignalRExceptionFilter>();
+            });
+
+            builder.Services.AddDbContext<WasalnyyDbContext>(options =>
 			  options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
@@ -75,6 +81,7 @@ namespace Wasalnyy.PL
             builder.Services.AddSingleton<ITripNotifier, TripNotifier>();
             builder.Services.AddSingleton<IWasalnyyHubNotifier, WasalnyyHubNotifier>();
 
+            builder.Services.AddScoped<WasalnyyOnlineActionFilter>();
 
             builder.Services.AddHttpClient();
 

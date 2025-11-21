@@ -2,7 +2,7 @@
 {
     public enum DriverStatus
     {
-        Offline,
+        UnAvailable,
         InTrip,
         Available
     }

@@ -43,6 +43,11 @@ namespace Wasalnyy.BLL.Service.Implementation
             return await _repo.GetAllUserConnectionsAsync(userId);
         }
 
+        public async Task<string?> GetUserIdAsync(string signalRConnectionId)
+        {
+            return await _repo.GetUserIdAsync(signalRConnectionId);
+        }
+
         public async Task<bool> IsOnlineAsync(string userId)
         {
             return await _repo.IsOnlineAsync(userId);

@@ -36,15 +36,17 @@ namespace Wasalnyy.PL.EventHandlers.Implementation
 
             if (driverConId != null && riderConIds.Count() > 0)
             {
+                await _hubContext.Groups.RemoveFromGroupAsync(driverConId, $"driversAvailableInZone_{dto.ZoneId}");
+                await _hubContext.Clients.Group($"driversAvailableInZone_{dto.ZoneId}").SendAsync("tripAcceptedFromAnotherDriver", dto.Id);
+
                 await _hubContext.Groups.AddToGroupAsync(driverConId, $"trip_{dto.Id}");
+
                 var driver = await _driverService.GetByIdAsync(dto.DriverId);
                 foreach (var conId in riderConIds)
                 {
                     await _hubContext.Groups.AddToGroupAsync(conId, $"trip_{dto.Id}");
 
-
                     await _hubContext.Clients.Client(conId).SendAsync("tripAccepeted", driver);
-
                 }
             }
         }

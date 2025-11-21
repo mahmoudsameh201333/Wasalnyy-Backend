@@ -59,7 +59,8 @@ namespace Wasalnyy.BLL.Service.Implementation
                 if (ZoneHelper.IsPointInPolygon(coordinate.Lat, coordinate.Lng, zone.Coordinates.ToList()))
                     return _mapper.Map<Zone, ReturnZoneDto>(zone);
             }
-            throw new OutOfZoneException($"Coordinates '{coordinate.Lat} ,{coordinate.Lng}' out of zone.");
+            return null;
+            //throw new OutOfZoneException($"Coordinates '{coordinate.Lat} ,{coordinate.Lng}' out of zone.");
         }
 
         public async Task UpdateZoneAsync(Guid zoneId, UpdateZoneDto dto)
