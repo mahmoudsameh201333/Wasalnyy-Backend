@@ -40,8 +40,12 @@ namespace Wasalnyy.PL.Controllers
 
             if (string.IsNullOrWhiteSpace(paymentDetails.TransactionId))
                 return BadRequest("TransactionId is required.");
-            if (paymentDetails.Status != PaymentStatus.Success)
-                return BadRequest("Payment Status is not in correct format");
+            if (paymentDetails.Status != PaymentStatus.Success &&
+                paymentDetails.Status != PaymentStatus.Fail)
+            {
+                return BadRequest("Payment status must be either (1) for Success or (0) for Fail.");
+            }
+
             // Call business layer
             var result = await _paymentService.HandleRiderPayment(paymentDetails);
 

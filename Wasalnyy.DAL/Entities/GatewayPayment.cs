@@ -8,7 +8,7 @@
         public string TransactionId { get; set; }
         public PaymentStatus Status { get; set; }
         public decimal Amount { get; set; }
-        public DateTime Date { get; set; } = DateTime.UtcNow;
+        public DateTime Date { get; set; } = DateTime.Now;
     }
 
    
