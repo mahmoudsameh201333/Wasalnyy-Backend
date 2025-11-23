@@ -38,10 +38,10 @@ namespace Wasalnyy.DAL.Repo.Implementation
             await _context.Wallets.AddAsync(wallet);
         }
 
-        public Task UpdateAsync(Wallet wallet)
+        public async Task UpdateAsync(Wallet wallet)
         {
             _context.Entry(wallet).State = EntityState.Modified;
-            return Task.CompletedTask;
+            await _context.SaveChangesAsync();  // <-- this actually updates the table
         }
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

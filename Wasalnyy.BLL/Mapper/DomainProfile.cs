@@ -1,12 +1,13 @@
 ﻿using AutoMapper;
 using Wasalnyy.BLL.DTO;
 using Wasalnyy.BLL.DTO.Driver;
+using Wasalnyy.BLL.DTO.Payment;
 using Wasalnyy.BLL.DTO.Pricing;
 using Wasalnyy.BLL.DTO.Rider;
 using Wasalnyy.BLL.DTO.Trip;
-using Wasalnyy.BLL.DTO.Zone;
 using Wasalnyy.BLL.DTO.Update;
 using Wasalnyy.BLL.DTO.Wallet;
+using Wasalnyy.BLL.DTO.Zone;
 
 namespace Wasalnyy.BLL.Mapper
 {
@@ -14,6 +15,11 @@ namespace Wasalnyy.BLL.Mapper
     {
         public DomainProfile()
         {
+            CreateMap<RiderPaymentDetailsDTO, GatewayPayment>();
+
+
+
+
             CreateMap<Driver, ReturnDriverDto>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName))

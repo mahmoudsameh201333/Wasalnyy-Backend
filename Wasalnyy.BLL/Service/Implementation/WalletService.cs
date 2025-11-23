@@ -2,7 +2,8 @@
 using Wasalnyy.DAL.Database;
 using Wasalnyy.DAL.Repo.Abstraction;
 
-
+using Wasalnyy.BLL.DTO.Wallet;
+using AutoMapper;
 namespace Wasalnyy.BLL.Service.Implementation
 {
     public class WalletService : IWalletService
@@ -10,15 +11,17 @@ namespace Wasalnyy.BLL.Service.Implementation
         private readonly IWalletRepo _walletRepo;
         private readonly IWalletTransactionRepo _transactionRepo;
         private readonly WasalnyyDbContext _context;
+        private readonly IMapper _mapper;
 
         public WalletService(
             IWalletRepo walletRepo,
             IWalletTransactionRepo transactionRepo,
-            WasalnyyDbContext context)
+            WasalnyyDbContext context, IMapper mapper)
         {
             _walletRepo = walletRepo;
             _transactionRepo = transactionRepo;
             _context = context;
+            _mapper = mapper;
         }
 
         // ============================================================
@@ -35,49 +38,46 @@ namespace Wasalnyy.BLL.Service.Implementation
         //   ADD MONEY TO WALLET
         // ============================================================
 
-        public async Task<bool> AddToWalletAsync(string userId, decimal amount, string? reference = null)
+        public async Task<IncreaseWalletBalanceResponse> IncreaseWalletAsync(string userId, decimal amount)
         {
+
             if (amount <= 0)
-                return false;
+                return new IncreaseWalletBalanceResponse(false ,"Amount of money cant be negative or zero");
 
-            using var transaction = await _context.Database.BeginTransactionAsync();
 
-            var wallet = await _walletRepo.GetByUserIdAsync(userId);
-
-            // Auto-create wallet if none exists
-            if (wallet == null)
+            try
             {
-                wallet = new Wallet
-                {
-                    UserId = userId,
-                    Balance = 0,
-                    CreatedAt = DateTime.UtcNow
-                };
+                var wallet = await _walletRepo.GetByUserIdAsync(userId);
+                if (wallet == null)
+                    return new IncreaseWalletBalanceResponse(false, "This User doesnt have Wallet Call Dev to make sure Rider or driver User have wallet created");
+                wallet.Balance += amount;
+                wallet.ModifiedAt = DateTime.Now;
+                await _walletRepo.UpdateAsync(wallet);
 
-                await _walletRepo.CreateAsync(wallet);
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                return new IncreaseWalletBalanceResponse(false, $"An error occurred while processing payment: {innerMessage}");
             }
 
-            wallet.Balance += amount;
-            wallet.ModifiedAt = DateTime.UtcNow;
 
-            await _walletRepo.UpdateAsync(wallet);
+            return new IncreaseWalletBalanceResponse(true, "Wallet balance increased successfully");
+            //var log = new WalletTransaction
+            //{
+            //    WalletId = wallet.Id,
+            //    Amount = amount,
+            //    TransactionType = WalletTransactionType.Credit,
+            //    Description = reference ?? "Wallet Top-Up",
+            //    CreatedAt = DateTime.UtcNow
+            //};
 
-            var log = new WalletTransaction
-            {
-                WalletId = wallet.Id,
-                Amount = amount,
-                TransactionType = WalletTransactionType.Credit,
-                Description = reference ?? "Wallet Top-Up",
-                CreatedAt = DateTime.UtcNow
-            };
+            //await _transactionRepo.CreateAsync(log);
 
-            await _transactionRepo.CreateAsync(log);
+            //await _walletRepo.SaveChangesAsync();
+            //await _transactionRepo.SaveChangesAsync();
 
-            await _walletRepo.SaveChangesAsync();
-            await _transactionRepo.SaveChangesAsync();
-
-            await transaction.CommitAsync();
-            return true;
+            //return true;
         }
 
 
@@ -180,5 +180,12 @@ namespace Wasalnyy.BLL.Service.Implementation
             await transaction.CommitAsync();
             return true;
         }
+
+     
+
+       
+
+        
     }
 }
+

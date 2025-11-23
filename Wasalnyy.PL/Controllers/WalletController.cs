@@ -30,17 +30,17 @@ namespace Wasalnyy.API.Controllers
             return Ok(_mapper.Map<WalletDto>(wallet));
         }
 
-        // POST: api/wallet/user/{userId}/add
-        [HttpPost("user/{userId}/add")]
-        public async Task<IActionResult> AddToWallet(string userId, [FromBody] decimal amount, [FromQuery] string? reference = null)
-        {
-            var success = await _walletService.AddToWalletAsync(userId, amount, reference);
-            if (!success)
-                return BadRequest(new { message = "Failed to add money. Check amount or user." });
+        //// POST: api/wallet/user/{userId}/add
+        //[HttpPost("user/{userId}/add")]
+        //public async Task<IActionResult> AddToWallet(string userId, [FromBody] decimal amount, [FromQuery] string? reference = null)
+        //{
+        //    var success = await _walletService.IncreaseWalletAsync(userId, amount);
+        //    if (!success)
+        //        return BadRequest(new { message = "Failed to add money. Check amount or user." });
 
-            var wallet = await _walletService.GetWalletByUserIdAsync(userId);
-            return Ok(_mapper.Map<WalletDto>(wallet));
-        }
+        //    var wallet = await _walletService.GetWalletByUserIdAsync(userId);
+        //    return Ok(_mapper.Map<WalletDto>(wallet));
+        //}
 
         // POST: api/wallet/user/{userId}/withdraw
         [HttpPost("user/{userId}/withdraw")]
