@@ -48,9 +48,9 @@ namespace Wasalnyy.PL.Controllers
         }
 
 
-        [HttpPost("AcceptTrip")]
+        [HttpPost("AcceptTrip/{tripId}")]
         [Authorize(Roles = "Driver")]
-        public async Task<IActionResult> AcceptTripAsync([FromBody] Guid tripId)
+        public async Task<IActionResult> AcceptTripAsync([FromRoute] Guid tripId)
         {
             var driverId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -61,9 +61,9 @@ namespace Wasalnyy.PL.Controllers
             return Ok();
         }
 
-        [HttpPost("StartTrip")]
+        [HttpPost("StartTrip/{tripId}")]
         [Authorize(Roles = "Driver")]
-        public async Task<IActionResult> StartTripAsync([FromBody] Guid tripId)
+        public async Task<IActionResult> StartTripAsync([FromRoute] Guid tripId)
         {
             var driverId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -74,9 +74,9 @@ namespace Wasalnyy.PL.Controllers
             return Ok();
         }
 
-        [HttpPost("EndTrip")]
+        [HttpPost("EndTrip/{tripId}")]
         [Authorize(Roles = "Driver")]
-        public async Task<IActionResult> EndTripAsync([FromBody] Guid tripId)
+        public async Task<IActionResult> EndTripAsync([FromRoute] Guid tripId)
         {
             var driverId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 

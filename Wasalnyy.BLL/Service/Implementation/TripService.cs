@@ -329,7 +329,7 @@ namespace Wasalnyy.BLL.Service.Implementation
         public async Task<IEnumerable<TripDto>> GetByRequestedTripsByZoneAsync(Guid zoneId)
         {
             _validator.ValidateGetByRequestedTripsByZone(zoneId);
-            return _mapper.Map<IEnumerable<Trip>, IEnumerable<TripDto>>( await _tripRepo.GetRequestedTripsByZoneAsync(zoneId));
+            return _mapper.Map<IEnumerable<Trip>, IEnumerable<TripDto>>( await _tripRepo.GetAvailableTripsByZoneAsync(zoneId));
         }
 
         public async Task<int> GetPagesCountAsync(int pageSize = 10)
@@ -390,6 +390,63 @@ namespace Wasalnyy.BLL.Service.Implementation
             await _tripRepo.SaveChangesAsync();
         }
 
-        
-    }
+		public async Task CancelTripAsync(string UserId, Guid tripId)
+		{
+            _validator.ValidateCancelTripAsync(UserId, tripId);
+			var trip = await _tripRepo.GetByIdAsync(tripId);
+			if (trip == null)
+				throw new NotFoundException($"Trip with ID '{tripId}' was not found.");
+            
+            if(trip.TripStatus == TripStatus.Ended || trip.TripStatus == TripStatus.Cancelled)
+            {
+                throw new InvalidOperationException("Trip is already Ended or Cancelled");
+            }
+            if(trip.RiderId == UserId)
+            {
+                if(trip.TripStatus == TripStatus.Accepted)
+                {
+                    await _walletService.WithdrawFromWalletAsync(UserId, (decimal)(trip.Price * 0.2), $"Cancellation fee for trip {trip.Id}");
+
+				}
+                else if(trip.TripStatus == TripStatus.Started)
+				{
+					(double distanceKm, double durationMinutes) =  await _routeService.CalculateDistanceAndDurationAsync(trip.PickupCoordinates, trip.CurrentCoordinates);
+                    double price = _pricingService.CalculatePrice(new CalculatePriceDto
+                    {
+                        DistanceKm = distanceKm,
+                        DurationMinutes = durationMinutes
+                    });
+					await _walletService.WithdrawFromWalletAsync(UserId, (decimal)price, $"Cancellation fee for trip {trip.Id}");
+				}
+				trip.TripStatus = TripStatus.Cancelled;
+				await _tripRepo.UpdateTripAsync(trip);
+				await _tripRepo.SaveChangesAsync();
+
+                 _tripEvents.FireTripCanceled(_mapper.Map<Trip, TripDto>(trip));
+            }
+            else if(trip.DriverId == UserId)
+            {
+                if (trip.TripStatus == TripStatus.Started)
+                {
+                    (double distanceKm, double durationMinutes) = await _routeService.CalculateDistanceAndDurationAsync(trip.PickupCoordinates, trip.CurrentCoordinates);
+                    double price = _pricingService.CalculatePrice(new CalculatePriceDto
+                    {
+                        DistanceKm = distanceKm,
+                        DurationMinutes = durationMinutes
+                    });
+					await _walletService.TransferAsync(trip.RiderId, trip.DriverId, (decimal)trip.Price, $"{tripId}");// discuss
+                    await _walletService.WithdrawFromWalletAsync(UserId, (decimal)(trip.Price * 0.1), $"Cancellation fee for driver {UserId}");
+				}
+             	trip.TripStatus = TripStatus.Cancelled;
+				await _tripRepo.UpdateTripAsync(trip);
+				await _tripRepo.SaveChangesAsync();
+				_tripEvents.FireTripCanceled(_mapper.Map<Trip, TripDto>(trip));
+				await _driverService.SetDriverAvailableAsync(UserId, trip.CurrentCoordinates);
+			}
+            else
+            {
+				throw new InvalidOperationException($"Id did not match wiht any rider or driver");
+			}
+		}
+	}
 }

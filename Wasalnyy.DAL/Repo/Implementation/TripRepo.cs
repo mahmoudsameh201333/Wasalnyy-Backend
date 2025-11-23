@@ -88,13 +88,13 @@ namespace Wasalnyy.DAL.Repo.Implementation
                 .SingleOrDefaultAsync(x => x.Id == id);
         }
 
-        public async Task<IEnumerable<Trip>> GetRequestedTripsByZoneAsync(Guid zoneId)
+        public async Task<IEnumerable<Trip>> GetAvailableTripsByZoneAsync(Guid zoneId)
         {
             return await _context.Trips.AsNoTracking()
                 .Include(x => x.Driver)
                 .Include(x => x.Rider)
                 .Include(x => x.Zone)
-                .Where(x=> x.ZoneId == zoneId && x.TripStatus == TripStatus.Requested)
+                .Where(x=> x.ZoneId == zoneId && x.TripStatus == TripStatus.Confirmed)
                 .ToListAsync();
         }
 

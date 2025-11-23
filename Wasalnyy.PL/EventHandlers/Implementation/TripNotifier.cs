@@ -62,7 +62,24 @@ namespace Wasalnyy.PL.EventHandlers.Implementation
 
         public async Task OnTripCanceled(TripDto dto)
         {
-        }
+			var _connectionService = _serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<IWasalnyyHubService>();
+
+			await _hubContext.Clients.Group($"trip_{dto.Id}").SendAsync("tripCanceled", dto);
+
+			var riderConIds = await _connectionService.GetAllUserConnectionsAsync(dto.RiderId);
+			var driverConId = (await _connectionService.GetAllUserConnectionsAsync(dto.DriverId)).FirstOrDefault();
+
+			if (driverConId != null && riderConIds.Count() > 0)
+			{
+				await _hubContext.Groups.RemoveFromGroupAsync(driverConId, $"trip_{dto.Id}");
+
+				foreach (var conId in riderConIds)
+				{
+					await _hubContext.Groups.RemoveFromGroupAsync(conId, $"trip_{dto.Id}");
+
+				}
+			}
+		}
 
         public async Task OnTripEnded(TripDto dto)
         {

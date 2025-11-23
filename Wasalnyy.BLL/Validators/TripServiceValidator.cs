@@ -18,6 +18,14 @@ namespace Wasalnyy.BLL.Validators
             if (id == Guid.Empty)
                 throw new ArgumentException($"id '{id}' is empty");
         }
+        public void ValidateCancelTripAsync(string UserId, Guid tripId)
+		{
+			if (string.IsNullOrWhiteSpace(UserId))
+				throw new ArgumentException(UserId);
+
+			if (tripId == Guid.Empty)
+				throw new ArgumentException($"tripId '{tripId}' is empty");
+		}
 
         public void ValidateConfirmTrip(string riderId, Guid tripId)
         {

@@ -8,7 +8,7 @@ namespace Wasalnyy.DAL.Repo.Abstraction
         Task<Trip?> GetByIdAsync(Guid id);
         Task<Trip?> GetDriverActiveTripAsync(string driverId);
         Task<Trip?> GetRiderActiveTripAsync(string riderId);
-        Task<IEnumerable<Trip>> GetRequestedTripsByZoneAsync(Guid zoneId);
+        Task<IEnumerable<Trip>> GetAvailableTripsByZoneAsync(Guid zoneId);
         Task<IEnumerable<Trip>> GetTripsPaginatedAsync(Expression<Func<Trip, object>> orderBy,
                                         bool descending = false, int pageNumber = 1, int pageSize = 10);
         Task<IEnumerable<Trip>> GetAllRiderTripsPaginatedAsync(string riderId, Expression<Func<Trip, object>> orderBy,
