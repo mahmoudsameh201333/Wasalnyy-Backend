@@ -42,5 +42,16 @@ namespace Wasalnyy.DAL.Repo.Implementation
                 .CountAsync(r=>r.IsDeleted==false);
         }
 
+        public async Task UpdateRiderAsync(Rider rider)
+        {
+            _context.Entry(rider).State = EntityState.Modified;
+
+        }
+
+        public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            return await _context.SaveChangesAsync(cancellationToken);
+        }
+
     }
 }

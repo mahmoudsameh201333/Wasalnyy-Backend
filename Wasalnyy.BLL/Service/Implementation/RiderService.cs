@@ -32,5 +32,63 @@ namespace Wasalnyy.BLL.Service.Implementation
 
             return _mapper.Map<Rider, ReturnRiderDto>(rider);
         }
+
+        public async Task<bool> IsRiderSuspended(string id)
+        {
+            var rider = await _riderRepo.GetByIdAsync(id);
+           
+
+            return rider.IsSuspended;
+
+        }
+
+        public async Task<string> RiderName(string id)
+        {
+            var rider = await _riderRepo.GetByIdAsync(id); 
+            if (rider == null)
+                return string.Empty; 
+
+            return rider.FullName;
+
+        }
+
+        public async Task<string?> RiderProfileImage(string id)
+        {
+            var rider = await _riderRepo.GetByIdAsync(id);
+            if (rider == null)
+                return string.Empty;
+
+            return rider.Image;
+        }
+
+        public async Task<int> RiderTotalTrips(string id)
+        {
+            var rider = await _riderRepo.GetByIdAsync(id);
+            if (rider == null)
+                return 0;
+
+            return rider.Trips.Count();
+        }
+
+        public Task<decimal> RiderWalletBalance(string id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<bool> UpdateRiderInfo(string id, RiderUpdateDto riderUpdate)
+        {
+            var oldriderinfos = await _riderRepo.GetByIdAsync(id);
+            if (oldriderinfos == null)
+            {
+                return false;
+            }
+
+            _mapper.Map(riderUpdate, oldriderinfos);
+            await _riderRepo.UpdateRiderAsync(oldriderinfos);
+            await _riderRepo.SaveChangesAsync();
+            return true;
+
+        }
+
     }
 }

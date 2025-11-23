@@ -52,5 +52,8 @@ namespace Wasalnyy.BLL.Service.Abstraction
 
         
         Task<decimal> GetRevenueAsync(DateTime from, DateTime to);
+
+        Task SuspendAccountDriver(string lic);
+        Task SuspendAccountRider(string id);
     }
 }

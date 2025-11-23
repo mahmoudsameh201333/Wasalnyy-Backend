@@ -16,8 +16,10 @@
 		public Gender Gender { get; set; }
 		public DateTime CreatedAt { get; set; }
 		public bool IsDeleted { get; protected set; } = false;
+        public bool IsSuspended { get; protected set; } = false;
 
-		public User()
+
+        public User()
 		{
 			
 		}
@@ -29,5 +31,8 @@
 			Gender = gender;
 			CreatedAt = DateTime.Now;
 		}
-	}
+
+        public void Suspend() => IsSuspended = true;
+        public void Activate() => IsSuspended = false;
+    }
 }

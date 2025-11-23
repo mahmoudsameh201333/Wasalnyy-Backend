@@ -28,8 +28,7 @@ namespace Wasalnyy.BLL.Mapper
                 .ForMember(dest => dest.RiderId, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.Image, opt => opt.MapFrom(src => src.Image));
 
-         CreateMap<UpdateRider,Rider>().ReverseMap();
-            CreateMap<UpdateDriver, Driver>().ReverseMap();
+         
 
             // Wallet mappings
             CreateMap<Wallet, WalletDto>().ReverseMap();
@@ -65,6 +64,9 @@ namespace Wasalnyy.BLL.Mapper
                     .ForMember(dest => dest.Id, opt => opt.Ignore());
 
             CreateMap<Vehicle, VehicleDto>();
+            CreateMap<DriverUpdateDto, Driver>().ForAllMembers(opt => opt.Condition((src, dest, value) => value != null));
+            CreateMap<RiderUpdateDto, Rider>().ForAllMembers(opt => opt.Condition((src, dest, value) => value != null));
+
         }
     }
 }

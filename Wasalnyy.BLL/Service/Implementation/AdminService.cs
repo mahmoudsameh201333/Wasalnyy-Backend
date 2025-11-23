@@ -145,5 +145,25 @@ namespace Wasalnyy.BLL.Service.Implementation
         {
             throw new NotImplementedException();
         }
+
+        public async Task SuspendAccountDriver(string lic)
+        {
+            var driver = await _driverRepo.GetDriverByLicense(lic);
+            if (driver != null)
+            {
+                driver.Suspend(); 
+                await _driverRepo.SaveChangesAsync();
+            }
+        }
+
+        public async Task SuspendAccountRider(string id)
+        {
+            var driver = await _riderRepo.GetByIdAsync(id);
+            if (driver != null)
+            {
+                driver.Suspend();
+                await _riderRepo.SaveChangesAsync();
+            }
+        }
     }
 }
