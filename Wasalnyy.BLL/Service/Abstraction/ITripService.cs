@@ -25,6 +25,7 @@ namespace Wasalnyy.BLL.Service.Abstraction
         Task<TripPaginationDto> GetAllDriverTripsPaginatedAsync(string driverId, Expression<Func<Trip, object>> orderBy,
                                         bool descending = false, int pageNumber = 1, int pageSize = 10);
         Task RequestTripAsync(string riderId, RequestTripDto dto);
+        Task ConfirmTripAsync(string riderId, Guid tripId);
         Task AcceptTripAsync(string driverId, Guid tripId);
         Task StartTripAsync(string driverId, Guid tripId);
         Task EndTripAsync(string driverId, Guid tripId);

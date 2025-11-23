@@ -14,5 +14,6 @@ namespace Wasalnyy.BLL.EventHandlers.Abstraction
         Task OnTripStarted(TripDto dto);
         Task OnTripEnded(TripDto dto);
         Task OnTripCanceled(TripDto dto);
+        Task OnTripConfirmed(TripDto dto);
     }
 }

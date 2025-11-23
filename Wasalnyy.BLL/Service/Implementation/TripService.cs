@@ -26,12 +26,13 @@ namespace Wasalnyy.BLL.Service.Implementation
         private readonly IRouteService _routeService;
         private readonly IPricingService _pricingService;
         private readonly IZoneService _zoneService;
+        private readonly IWalletService _walletService;
         private readonly TripServiceValidator _validator;
         private readonly IMapper _mapper;
 
         public TripService(ITripRepo tripRepo, IDriverService driverService, TripEvents tripEvents,
             IRiderService riderService, IRouteService routeService, IPricingService pricingService,
-            IZoneService zoneService, TripServiceValidator tripServiceValidator, IMapper mapper)
+            IZoneService zoneService, TripServiceValidator tripServiceValidator, IWalletService walletService, IMapper mapper)
         {
             _tripRepo = tripRepo;
             _driverService = driverService;
@@ -41,6 +42,7 @@ namespace Wasalnyy.BLL.Service.Implementation
             _pricingService = pricingService;
             _zoneService = zoneService;
             _validator = tripServiceValidator;
+            _walletService = walletService;
             _mapper = mapper;
         }
 
@@ -56,6 +58,7 @@ namespace Wasalnyy.BLL.Service.Implementation
 
             if(riderActiveTripe != null)
                 throw new AlreadyInTripException($"Rider with id {riderId} already in trip.");
+
 
             var trip = _mapper.Map<RequestTripDto, Trip>(dto);
 
@@ -75,10 +78,39 @@ namespace Wasalnyy.BLL.Service.Implementation
             (trip.DistanceKm, trip.DurationMinutes) = await _routeService.CalculateDistanceAndDurationAsync(trip.PickupCoordinates, trip.DistinationCoordinates);
             trip.Price = _pricingService.CalculatePrice(_mapper.Map<Trip, CalculatePriceDto>(trip));
 
+            if (dto.PaymentMethod == PaymentMethod.Wallet && !await _walletService.CheckUserBalanceAsync(riderId, (decimal)trip.Price))
+                throw new WalletBalanceNotSufficantException($"Your wallet balance not suficant");
+
             await _tripRepo.CreateTripAsync(trip);
             await _tripRepo.SaveChangesAsync();
 
             _tripEvents.FireTripRequested(_mapper.Map<Trip, TripDto>(trip));
+        }
+        public async Task ConfirmTripAsync(string riderId, Guid tripId)
+        {
+            _validator.ValidateConfirmTrip(riderId, tripId);
+
+            var rider = await _riderService.GetByIdAsync(riderId);
+            if (rider == null)
+                throw new NotFoundException($"Rider with ID '{riderId}' was not found.");
+
+            var trip = await _tripRepo.GetByIdAsync(tripId);
+
+            if (trip == null)
+                throw new NotFoundException($"Trip with ID '{tripId}' was not found.");
+
+            if (trip.TripStatus != TripStatus.Requested)
+                throw new InvalidOperationException($"Trip {tripId} is not in a requestable state. Current status: {trip.TripStatus}");
+
+
+            if (rider.RiderId != trip.RiderId)
+                throw new InvalidOperationException($"rider with id {rider.RiderId} can not confirm another rider trip");
+
+            trip.TripStatus = TripStatus.Confirmed;
+            await _tripRepo.UpdateTripAsync(trip);
+            await _tripRepo.SaveChangesAsync();
+
+            _tripEvents.FireTripConfirmed(_mapper.Map<Trip, TripDto>(trip));
         }
 
         public async Task AcceptTripAsync(string driverId, Guid tripId)
@@ -89,7 +121,7 @@ namespace Wasalnyy.BLL.Service.Implementation
             if (trip == null)
                 throw new NotFoundException($"Trip with ID '{tripId}' was not found.");
 
-            if (trip.TripStatus != TripStatus.Requested)
+            if (trip.TripStatus != TripStatus.Confirmed)
                 throw new InvalidOperationException($"Trip {tripId} is not in a requestable state. Current status: {trip.TripStatus}");
 
 
@@ -169,6 +201,9 @@ namespace Wasalnyy.BLL.Service.Implementation
 
             await _tripRepo.UpdateTripAsync(trip);
             await _tripRepo.SaveChangesAsync();
+
+            if(trip.PaymentMethod == PaymentMethod.Wallet)
+                await _walletService.TransferAsync(trip.RiderId, trip.DriverId, (decimal) trip.Price, $"{tripId}");
 
             await _driverService.SetDriverAvailableAsync(driverId, driver.Coordinates);
 
@@ -354,5 +389,7 @@ namespace Wasalnyy.BLL.Service.Implementation
             await _tripRepo.UpdateTripAsync(trip);
             await _tripRepo.SaveChangesAsync();
         }
+
+        
     }
 }

@@ -31,7 +31,20 @@ namespace Wasalnyy.PL.Controllers
                 return Unauthorized();
 
             await _tripService.RequestTripAsync(riderId, dto);
-            return Created();
+            return Ok();
+        }
+
+        [HttpPost("Confirm/{tripId}")]
+        [Authorize(Roles = "Rider")]
+        public async Task<IActionResult> ConfirmAsyncAsync([FromRoute] Guid tripId)
+        {
+            var riderId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (riderId == null)
+                return Unauthorized();
+
+            await _tripService.ConfirmTripAsync(riderId, tripId);
+            return Ok();
         }
 
 

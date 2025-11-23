@@ -101,6 +101,7 @@ namespace Wasalnyy.BLL.Common
             tripEvents.TripStarted += tripHandler.OnTripStarted;
             tripEvents.TripEnded += tripHandler.OnTripEnded;
             tripEvents.TripCanceled += tripHandler.OnTripCanceled;
+            tripEvents.TripConfirmed += tripHandler.OnTripConfirmed;
 
 
 

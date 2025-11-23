@@ -181,11 +181,13 @@ namespace Wasalnyy.BLL.Service.Implementation
             return true;
         }
 
-     
+        public async Task<bool> CheckUserBalanceAsync(string userId, decimal amount)
+        {
+            var wallet = await _walletRepo.GetByUserIdAsync(userId);
 
-       
-
-        
+            return wallet != null && wallet.Balance >= amount;
+            
+        }
     }
 }
 
