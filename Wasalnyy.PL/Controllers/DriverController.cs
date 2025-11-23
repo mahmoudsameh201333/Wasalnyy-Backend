@@ -37,6 +37,19 @@ namespace Wasalnyy.PL.Controllers
             return Ok();
         }
 
+        [HttpPost("SetAsUnAvailable")]
+        public async Task<IActionResult> SetAsUnAvailableAsync()
+        {
+            var driverId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (driverId == null)
+                return Unauthorized();
+
+            await _driverService.SetDriverUnAvailableAsync(driverId);
+            return Ok();
+
+        }
+
         [HttpPost("UpdateLocation")]
         public async Task<IActionResult> UpdateLocationAsync([FromBody] Coordinates coordinate)
         {
