@@ -20,7 +20,8 @@ namespace Wasalnyy.PL.Controllers
         }
         [HttpPost("Request")]
         public async Task<IActionResult> RequestAsyncAsync([FromForm] RequestTripDto dto)
-        {
+        { 
+
             var riderId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             if (riderId == null)

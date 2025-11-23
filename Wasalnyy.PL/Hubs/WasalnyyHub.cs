@@ -25,6 +25,7 @@ namespace Wasalnyy.PL.Hubs
             await base.OnConnectedAsync();
 
             await _hubEvents.FireUserConnectedAsync(currentUserId, conId);
+            Console.WriteLine("user " + currentUserId + " connected");
         }
 
         public override async Task OnDisconnectedAsync(Exception? exception)

@@ -15,6 +15,9 @@ using Wasalnyy.DAL.Entities;
 using Wasalnyy.PL.EventHandlers.Implementation;
 using Wasalnyy.PL.Hubs;
 using Wasalnyy.PL.Middleware;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 namespace Wasalnyy.PL
 {
 	public class Program
@@ -54,14 +57,29 @@ namespace Wasalnyy.PL
 			builder.Services.AddEndpointsApiExplorer();
 			builder.Services.AddSwaggerGen();
 
-			builder.Services.AddCors(options =>
-			{
-				options.AddPolicy("AllowAngular",
-					policy => policy.WithOrigins("http://localhost:4200")
-									.AllowAnyHeader()
-									.AllowAnyMethod());
-			});
-			var modelPath = Path.Combine(builder.Environment.ContentRootPath, "models");
+           // builder.Services.AddCors(options =>
+           // {
+           //     options.AddPolicy("AllowAngular", policy =>
+           //    policy.WithOrigins("http://localhost:4200")
+           //          .AllowAnyHeader()
+           //          .AllowAnyMethod()
+           //          .AllowCredentials()
+           //);
+           // });
+          builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("CorsPolicy", builder =>
+                {
+                    builder
+                        .WithOrigins("http://localhost:4200") 
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .AllowCredentials(); 
+                });
+            });
+
+
+            var modelPath = Path.Combine(builder.Environment.ContentRootPath, "models");
 			Console.WriteLine($"Loading face models from: {modelPath}");
 			builder.Services.AddSingleton(sp =>
 			{
@@ -100,15 +118,22 @@ namespace Wasalnyy.PL
                 app.UseSwaggerUI();
             }
             app.UseHttpsRedirection();
+            app.UseRouting();
+
+            //// ? CORS before auth
+            //app.UseCors("AllowAngular");
+            app.UseCors("CorsPolicy");
+
             app.UseAuthentication();
             app.UseAuthorization();
-            app.UseCors("AllowAngular");
 
             app.UseStaticFiles();
             app.UseMiddleware<ExptionhandlingMiddleware>();
 
+            // SignalR hub
             app.MapHub<WasalnyyHub>("/Wasalnyy");
 
+            // Controllers
             app.MapControllers();
             app.Run();
         }
