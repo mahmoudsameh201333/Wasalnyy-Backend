@@ -237,7 +237,7 @@ namespace Wasalnyy.BLL.Service.Implementation
                 return;
 
             // Check if wallet already exists
-            var existingWallet = await _walletRepo.GetByUserIdAsync(user.Id);
+            var existingWallet = await _walletRepo.GetWalletOfUserIdAsync(user.Id);
             if (existingWallet != null)
                 return;
 

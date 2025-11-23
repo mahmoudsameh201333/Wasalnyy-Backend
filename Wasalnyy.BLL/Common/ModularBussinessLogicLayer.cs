@@ -20,13 +20,22 @@ namespace Wasalnyy.BLL.Common
 
             services.AddAutoMapper(x => x.AddProfile(new DomainProfile()));
 
-            //Payment 
+
             
+
+            //Payment and wallet
             services.AddScoped<IPaymentGetwayRepo, PaymentGetwayRepo>();
             services.AddScoped<IPaymentService, PaymentService>();
             services.AddScoped<IWalletService, WalletService>();
-            services.AddScoped<IWalletTransactionRepo, WalletTransactionRepo>(); 
+            services.AddScoped<IWalletTransactionRepo, WalletTransactionRepo>();
+            services.AddScoped<RiderService>(); // Or AddTransient/AddSingleton as needed
+            services.AddScoped<IWalletService, WalletService>();
+            services.AddScoped<IPaymentService, PaymentService>();
+            services.AddScoped<DriverService>(); // or AddTransient/AddSingleton
+            services.AddScoped<IWalletService, WalletService>();
+            services.AddScoped<IPaymentService, PaymentService>();
 
+            services.AddScoped<IWalletMoneyTransfersRepo, WalletMoneyTransfersRepo>();
             // Register services
             services.AddScoped<IDriverService, DriverService>();
             services.AddScoped<ITripService, TripService>();

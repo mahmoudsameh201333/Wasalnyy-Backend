@@ -14,7 +14,7 @@ namespace Wasalnyy.DAL.Entities
         public decimal Balance { get; set; } = 0;
 
         // Timestamps
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime? ModifiedAt { get; set; }
 
         // Transaction history

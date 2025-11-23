@@ -11,7 +11,7 @@ namespace Wasalnyy.BLL.DTO.Wallet
         public string DriverId { get; set; }
         public string RiderId { get; set; }
         public decimal Amount { get; set; }
-        public DateTime? CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; }
         public Guid TripId { get; set; }
      
     }

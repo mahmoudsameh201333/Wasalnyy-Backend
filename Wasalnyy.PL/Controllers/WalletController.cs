@@ -29,9 +29,11 @@ namespace Wasalnyy.API.Controllers
 
             if (string.IsNullOrWhiteSpace(dto.RiderId))
                 return BadRequest("RiderId is required.");
+            if (dto.CreatedAt == null)
+                return BadRequest("CreatedAt is required.");
 
             if (dto.DriverId == dto.RiderId)
-                return BadRequest("DriverId and RiderId cannot be the same user.");
+              return BadRequest("DriverId and RiderId cannot be the same user.");
 
             if (dto.Amount <= 0)
                 return BadRequest("Amount must be greater than 0.");
@@ -39,12 +41,12 @@ namespace Wasalnyy.API.Controllers
             if (dto.TripId == Guid.Empty)
                 return BadRequest("TripId is required.");
 
-            //var result = await _walletService.transferMoney(dto.RiderId,dto.DriverId,dto.Amount,null);
+            var result = await _walletService.TransferMoneyFromRiderToDriver(dto);
 
-            //if (!result)
-                return BadRequest("Transfer failed.");
+            if (result.IsSuccess==false)
+                return BadRequest("Transfer failed "+result.Message);
 
-            return Ok("Transfer completed successfully.");
+            return Ok(result.Message);
         }
 
         // GET: api/wallet/user/{userId}

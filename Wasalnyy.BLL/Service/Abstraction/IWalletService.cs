@@ -9,12 +9,18 @@ namespace Wasalnyy.BLL.Service.Abstraction
 {
     public interface IWalletService
     {
+        //4of deh ya mahmoud sameh mo4 3ayzha 
         Task<Wallet?> GetWalletByUserIdAsync(string userId);
 
         Task<IncreaseWalletBalanceResponse> IncreaseWalletAsync(string userId, decimal amount);
-        Task<bool> WithdrawFromWalletAsync(string userId, decimal amount, string? reference = null);
+
+        // w deh mo4 3ayhza 
+        //Task<bool> WithdrawFromWalletAsync(string userId, decimal amount, string? reference = null);
     
 
-       // Task<bool> TransferAsync(string fromUserId, string toUserId, decimal amount, string? tripId = null);
+        Task<TransferWalletResponse> TransferMoneyFromRiderToDriver(TransferMoneyBetweenUsersDTO transferDto);
+
+        //w deh mo4 3ayzha
+        // Task<bool> TransferAsync(string fromUserId, string toUserId, decimal amount, string? tripId = null);
     }
 }

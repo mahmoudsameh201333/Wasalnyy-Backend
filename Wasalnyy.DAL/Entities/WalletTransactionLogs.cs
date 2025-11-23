@@ -20,6 +20,6 @@ namespace Wasalnyy.DAL.Entities
         public string? Description { get; set; }
 
         // Timestamp
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } 
     }
 }
