@@ -19,6 +19,7 @@ namespace Wasalnyy.BLL.Mapper
 
 
             CreateMap<AddWalletTranferMoneyDTO, WalletMoneyTransfer>();
+            CreateMap<CreateWalletDTO, Wallet>();
 
 
             CreateMap<Driver, ReturnDriverDto>()

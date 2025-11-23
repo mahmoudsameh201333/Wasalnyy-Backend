@@ -88,7 +88,12 @@ namespace Wasalnyy.BLL.Service.Implementation
             // w 7laya enk mynf34 tndah 3la repo enta tendah 3la service 
             
 
-
+            await CreateWallet(new CreateWalletDTO
+            {
+                UserId = transferDto.RiderId,
+                CreatedAt = transferDto.CreatedAt,
+                Balance = 0
+            }); 
             using var transaction =  await _walletRepo.BeginTransactionAsync();
 
             try
@@ -191,6 +196,26 @@ namespace Wasalnyy.BLL.Service.Implementation
 
            
 
+        }
+
+        public async Task<CreateWalletResponse> CreateWallet(CreateWalletDTO createWalletDTO)
+        {
+            // Map DTO to entity
+            var wallet = _mapper.Map<Wallet>(createWalletDTO);
+
+            // Save to repository
+            try
+            {
+                await _walletRepo.CreateAsync(wallet);
+                await _walletRepo.SaveChangesAsync();
+                return new CreateWalletResponse(true, "Wallet Created succesfully ");
+            }
+            catch  (Exception ex)
+            {
+                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                return new CreateWalletResponse(false, $"Creating Wallet Failed: {innerMessage}");
+
+            }
         }
 
 

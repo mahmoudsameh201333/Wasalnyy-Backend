@@ -17,11 +17,11 @@ namespace Wasalnyy.DAL.Repo.Abstraction
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
         Task<IDbContextTransaction> BeginTransactionAsync();
 
-
+        Task CreateAsync(Wallet wallet);
 
         //4of dol ya mahmoud sameh  ana mo4 3ayzhom
         Task<Wallet?> GetByIdAsync(Guid walletId);
-        Task CreateAsync(Wallet wallet);
+   
 
 
     }

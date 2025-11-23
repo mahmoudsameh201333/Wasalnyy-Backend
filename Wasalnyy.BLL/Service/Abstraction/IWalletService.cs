@@ -14,10 +14,9 @@ namespace Wasalnyy.BLL.Service.Abstraction
 
         Task<IncreaseWalletBalanceResponse> IncreaseWalletAsync(IncreaseWalletDTO increaseWalletDTO);
 
-        // w deh mo4 3ayhza 
         //Task<bool> WithdrawFromWalletAsync(string userId, decimal amount, string? reference = null);
     
-
+        Task<CreateWalletResponse>CreateWallet(CreateWalletDTO createWalletDTO);
         Task<TransferWalletResponse> HandleTransferWalletMoneyFromRiderToDriver(TransferMoneyBetweenUsersDTO transferDto);
 
         //w deh mo4 3ayzha
