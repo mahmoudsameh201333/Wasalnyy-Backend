@@ -1,4 +1,6 @@
-﻿namespace Wasalnyy.DAL.Database
+﻿using Microsoft.EntityFrameworkCore;
+
+namespace Wasalnyy.DAL.Database
 {
     public class WasalnyyDbContext: IdentityDbContext<User>
     {
@@ -23,8 +25,15 @@
                 .HasForeignKey(t => t.WalletId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-
+            builder.Entity<Trip>()
+                .Property(e => e.TripStatus)
+                .HasConversion<string>();
+            
+            builder.Entity<Driver>()
+                .Property(e => e.DriverStatus)
+                .HasConversion<string>();
         }
+
 
         public DbSet<User> Users {  get; set; }
         public DbSet<Rider> Riders {  get; set; }
