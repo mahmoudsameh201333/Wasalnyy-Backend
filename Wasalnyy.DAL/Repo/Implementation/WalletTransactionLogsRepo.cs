@@ -8,28 +8,29 @@ using Wasalnyy.DAL.Repo.Abstraction;
 
 namespace Wasalnyy.DAL.Repo.Implementation
 {
-    public class WalletTransactionRepo : IWalletTransactionRepo
+    public class WalletTransactionLogsRepo : IWalletTransactionLogsRepo
     {
         private readonly WasalnyyDbContext _context;
 
-        public WalletTransactionRepo(WasalnyyDbContext context)
+        public WalletTransactionLogsRepo(WasalnyyDbContext context)
         {
             _context = context;
         }
 
-        public async Task CreateAsync(WalletTransaction transaction)
+        public async Task CreateAsync(WalletTransactionLogs transaction)
         {
+            transaction.Id = Guid.NewGuid();
             await _context.WalletTransactions.AddAsync(transaction);
         }
 
-        public async Task<WalletTransaction?> GetByIdAsync(Guid transactionId)
+        public async Task<WalletTransactionLogs?> GetByIdAsync(Guid transactionId)
         {
             return await _context.WalletTransactions
                 .AsNoTracking()
                 .SingleOrDefaultAsync(t => t.Id == transactionId);
         }
 
-        public async Task<IEnumerable<WalletTransaction>> GetByWalletIdAsync(Guid walletId)
+        public async Task<IEnumerable<WalletTransactionLogs>> GetByWalletIdAsync(Guid walletId)
         {
             return await _context.WalletTransactions
                 .AsNoTracking()

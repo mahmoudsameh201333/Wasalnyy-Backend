@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,9 @@ namespace Wasalnyy.DAL.Repo.Abstraction
     {
 
 
-        Task<bool> AddPaymentAsync(GatewayPayment getwayPayment);
-      
+        Task AddPaymentAsync(GatewayPaymentTransactions getwayPayment);
+        Task<IDbContextTransaction> BeginTransactionAsync();
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+
     }
 }

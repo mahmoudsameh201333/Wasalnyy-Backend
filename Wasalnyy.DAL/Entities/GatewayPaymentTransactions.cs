@@ -1,6 +1,6 @@
 ﻿namespace Wasalnyy.DAL.Entities
 {
-    public class GatewayPayment
+    public class GatewayPaymentTransactions
     {
         public Guid Id { get; set; } = Guid.NewGuid();
         public string RiderId { get; set; }

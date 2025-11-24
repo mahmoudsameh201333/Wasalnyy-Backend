@@ -16,6 +16,7 @@ namespace Wasalnyy.BLL.Service.Implementation
 		private readonly IFaceService _faceService;
 		private readonly IUserFaceDataRepo _faceRepo;
 		private readonly IWalletRepo _walletRepo;
+		private readonly IWalletService _walletService;
 		public AuthService(
 			UserManager<User> userManager,
 			JwtHandler jwtHandler,
@@ -24,7 +25,7 @@ namespace Wasalnyy.BLL.Service.Implementation
 			IConfiguration config,
 			IFaceService faceService,
 			IUserFaceDataRepo faceRepo,
-			IWalletRepo walletRepo)
+			IWalletRepo walletRepo,IWalletService walletService)
 		{
 			_userManager = userManager;
 			_jwtHandler = jwtHandler;
@@ -34,7 +35,8 @@ namespace Wasalnyy.BLL.Service.Implementation
 			_faceRepo = faceRepo;
             _walletRepo = walletRepo;
             _faceService = faceService;
-		}
+			this._walletService = walletService;
+        }
 		public async Task<AuthResult> RegisterDriverAsync(RegisterDriverDto dto)
 		{
 			var existingUser = await _userManager.FindByEmailAsync(dto.Email);
@@ -96,7 +98,20 @@ namespace Wasalnyy.BLL.Service.Implementation
 
 			await _userManager.AddToRoleAsync(driver, "Driver");
 			var jwt_token = await _jwtHandler.GenerateToken(driver);
-			return new AuthResult { Success = true, Message = "Driver registered successfully", Token = jwt_token, DriverId = driver.Id };
+
+           var resp= await _walletService.CreateWalletAsync(new DTO.Wallet.CreateWalletDTO
+            {
+                Balance = 0,
+				UserId = driver.Id,
+
+                CreatedAt=DateTime.Now
+
+            });
+			if (!resp.IsSuccess)
+			{
+				return new AuthResult { Success = false, Message = "Driver registered but wallet creation failed: " + resp.Message };
+            }	
+            return new AuthResult { Success = true, Message = "Driver registered successfully", Token = jwt_token, DriverId = driver.Id };
 		}
 		public async Task<AuthResult> RegisterRiderAsync(RegisterRiderDto dto)
 		{
@@ -142,7 +157,20 @@ namespace Wasalnyy.BLL.Service.Implementation
 			await _userManager.AddToRoleAsync(rider, "Rider");
 			var jwt_token = await _jwtHandler.GenerateToken(rider);
 
-			return new AuthResult { Success = true, Message = "Rider registered successfully", Token = jwt_token };
+            var resp = await _walletService.CreateWalletAsync(new DTO.Wallet.CreateWalletDTO
+            {
+                Balance = 0,
+                UserId = rider.Id,
+
+                CreatedAt = DateTime.Now
+
+            });
+            if (!resp.IsSuccess)
+            {
+                return new AuthResult { Success = false, Message = "Rider registered but wallet creation failed: " + resp.Message };
+            }
+
+            return new AuthResult { Success = true, Message = "Rider registered successfully", Token = jwt_token };
 		}
 		public async Task<AuthResult> LoginAsync(LoginDto dto, string? role = null)
 		{
@@ -237,7 +265,7 @@ namespace Wasalnyy.BLL.Service.Implementation
                 return;
 
             // Check if wallet already exists
-            var existingWallet = await _walletRepo.GetByUserIdAsync(user.Id);
+            var existingWallet = await _walletRepo.GetWalletOfUserIdAsync(user.Id);
             if (existingWallet != null)
                 return;
 

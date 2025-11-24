@@ -6,11 +6,10 @@ using System.Threading.Tasks;
 
 namespace Wasalnyy.DAL.Repo.Abstraction
 {
-    public interface IWalletTransactionRepo
+    public interface IWalletMoneyTransfersRepo
     {
-        Task CreateAsync(WalletTransaction transaction);
-        Task<IEnumerable<WalletTransaction>> GetByWalletIdAsync(Guid walletId);
-        Task<WalletTransaction?> GetByIdAsync(Guid transactionId);
+        public Task AddAsync(WalletMoneyTransfer transfer);
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+
     }
 }

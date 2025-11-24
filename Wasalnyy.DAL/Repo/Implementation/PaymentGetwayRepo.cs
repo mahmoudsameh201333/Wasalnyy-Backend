@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,14 +19,21 @@ namespace Wasalnyy.DAL.Repo.Implementation
             _context = context;
         }
 
-        public async Task<bool> AddPaymentAsync(GatewayPayment getwayPayment)
+        public async Task AddPaymentAsync(GatewayPaymentTransactions getwayPayment)
         {
             
             await _context.GatewayPayments.AddAsync(getwayPayment);
-            var result = await _context.SaveChangesAsync();
-            return result > 0;
+
         }
 
-        
+        public async Task<IDbContextTransaction> BeginTransactionAsync()
+        {
+            return await _context.Database.BeginTransactionAsync();
+        }
+        public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            return await _context.SaveChangesAsync(cancellationToken);
+        }
+
     }
 }

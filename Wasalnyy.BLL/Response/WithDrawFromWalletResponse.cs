@@ -6,18 +6,14 @@ using System.Threading.Tasks;
 
 namespace Wasalnyy.BLL.Response
 {
-    public class IncreaseWalletBalanceResponse
+    public class WithDrawFromWalletResponse
     {
-        public bool IsSuccess { get; set; }
-        public string Message { get; set; } 
-
-
-
-        public IncreaseWalletBalanceResponse(bool isSuccess, string message = "")
+        bool IsSuccess { get; set; }
+        string Message { get; set; }
+        public WithDrawFromWalletResponse(bool isSuccess, string message = "")
         {
             IsSuccess = isSuccess;
             Message = message;
-
         }
     }
 }

@@ -17,7 +17,7 @@
                .HasForeignKey<Wallet>(w => w.UserId)
                .OnDelete(DeleteBehavior.Cascade);
 
-            builder.Entity<WalletTransaction>()
+            builder.Entity<WalletTransactionLogs>()
                 .HasOne(t => t.Wallet)
                 .WithMany(w => w.Transactions)
                 .HasForeignKey(t => t.WalletId)
@@ -35,10 +35,10 @@
         public DbSet<Zone> Zones {  get; set; }
 		public DbSet<UserFaceData> UserFaceData { get; set; }
         public DbSet<Wallet> Wallets { get; set; }
-        public DbSet<WalletTransaction> WalletTransactions { get; set; }
-        public DbSet<DriverRiderTransaction> DriverRiderTransactions { get; set; }
+        public DbSet<WalletTransactionLogs> WalletTransactions { get; set; }
+        public DbSet<WalletMoneyTransfer> DriverRiderTransactions { get; set; }
         public DbSet<WasalnyyHubConnection> WasalnyyHubConnections {  get; set; }
-        public DbSet<GatewayPayment> GatewayPayments { get; set; }
+        public DbSet<GatewayPaymentTransactions> GatewayPayments { get; set; }
 
     }
 }

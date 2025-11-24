@@ -15,9 +15,12 @@ namespace Wasalnyy.BLL.Mapper
     {
         public DomainProfile()
         {
-            CreateMap<RiderPaymentDetailsDTO, GatewayPayment>();
+            CreateMap<RiderPaymentDetailsDTO, GatewayPaymentTransactions>();
 
+            CreateMap<CreateWalletTransactionDTO, WalletTransactionLogs>();
 
+            CreateMap<AddWalletTranferMoneyDTO, WalletMoneyTransfer>();
+            CreateMap<CreateWalletDTO, Wallet>();
 
 
             CreateMap<Driver, ReturnDriverDto>()
@@ -39,7 +42,7 @@ namespace Wasalnyy.BLL.Mapper
             // Wallet mappings
             CreateMap<Wallet, WalletDto>().ReverseMap();
 
-            CreateMap<WalletTransaction, WalletTransactionDto>()
+            CreateMap<WalletTransactionLogs, AddWalletTransactionDto>()
                 .ForMember(dest => dest.TransactionType,
                            opt => opt.MapFrom(src => src.TransactionType.ToString()));
 

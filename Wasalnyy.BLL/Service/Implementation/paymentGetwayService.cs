@@ -1,26 +1,34 @@
 ﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using Stripe;
 using Stripe.Checkout;
+using Stripe.V2;
+using System;
 using Wasalnyy.BLL.DTO.Payment;
 using Wasalnyy.BLL.DTO.Wallet;
+using Wasalnyy.DAL.Entities;
+using Wasalnyy.DAL.Repo.Abstraction;
 using Wasalnyy.DAL.Repo.Implementation;
 
 namespace Wasalnyy.BLL.Service.Implementation
 {
-	public class PaymentService : IPaymentService
+	public class paymentGetwayService : IPaymentService
 	{
 		private readonly IConfiguration config;
 		private readonly IPaymentGetwayRepo paymentGetwayRepo;
         private readonly IMapper _mapper;
 		private readonly IWalletService	walletService;
-        public PaymentService(IConfiguration config, IPaymentGetwayRepo  paymentGetwayRepo, IMapper mapper, IWalletService walletService)
+        private readonly RiderService riderService;
+        private readonly IWalletTransactionLogsRepo walletTransactionRepo;
+        public paymentGetwayService(IConfiguration config, IWalletTransactionLogsRepo walletTransactionRepo,IPaymentGetwayRepo  paymentGetwayRepo, IMapper mapper, IWalletService walletService,RiderService riderService)
 		{
 			this.config = config;
 			StripeConfiguration.ApiKey = config["Stripe:SecretKey"];
 			this.paymentGetwayRepo = paymentGetwayRepo;
             this._mapper= mapper;
-
-			this.walletService = walletService;
+            this.walletTransactionRepo = walletTransactionRepo;
+            this.walletService = walletService;
+            this.riderService = riderService;
         }
 		public async Task<string> CreatePaymentSession(decimal amount, string currency, string successUrl, string cancelUrl)
 		{
@@ -62,34 +70,82 @@ namespace Wasalnyy.BLL.Service.Implementation
         }
         private async Task<RiderPaymentSuccessResponse> HandleSuccessfulPaymentAsync(RiderPaymentDetailsDTO paymentDetails)
         {
-            var paymentEntity = _mapper.Map<GatewayPayment>(paymentDetails);
-            //1- save payment transaction in payment getway table as successful
-            try
+            DateTime dateTime=DateTime.Now;
+
+            var paymentEntity = _mapper.Map<GatewayPaymentTransactions>(paymentDetails);
+
+             var transaction =await  paymentGetwayRepo.BeginTransactionAsync();
+            try 
             {
+                //1-check if this rider valid or not  
+                var rider = await riderService.GetByIdAsync(paymentDetails.RiderId);
+                if (rider == null)
+                    return new RiderPaymentSuccessResponse(false, "Rider not found ");
+                //2-check if this rider has a wallet 
+                var riderWallet = await walletService.GetWalletOfUserIdAsync(paymentDetails.RiderId);
+                if (riderWallet == null)
+                    return new RiderPaymentSuccessResponse(false, "Rider Wallet not found ");
+
+                //3- save payment transaction in payment getway table as successful
                 await paymentGetwayRepo.AddPaymentAsync(paymentEntity);
+
+                // 4 - Increase Wallet balance of the rider
+                var walletResponse = await walletService.IncreaseWalletAsync(
+                    new IncreaseWalletDTO
+                    {
+                        UserId = paymentDetails.RiderId,
+                        Amount = paymentDetails.Amount,
+                        DateTime = dateTime
+                    }
+                );
+
+                if (!walletResponse.IsSuccess)
+                    return new RiderPaymentSuccessResponse(false, $"Error updating wallet: {walletResponse.Message}");
+
+
+                //5- log wallet transaction
+               
+
+                //6-save all changes
+                await paymentGetwayRepo.SaveChangesAsync();
+
+                //7-commit transaction
+                await transaction.CommitAsync();
+
+                return new RiderPaymentSuccessResponse(true, "Payment processed successfully.");
             }
             catch (Exception ex)
-            {
+            { 
+                
+                 await transaction.RollbackAsync();
                 var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
-                return new RiderPaymentSuccessResponse(false, $"Error saving payment: {innerMessage}");
+                return new RiderPaymentSuccessResponse(false, $"Error processing payment: {innerMessage}");
+
             }
 
-            //2-Increase Wallet balance 
 
-            var walletResponse = await walletService.IncreaseWalletAsync(paymentDetails.RiderId, paymentDetails.Amount);
-            if (!walletResponse.IsSuccess)
-                return new RiderPaymentSuccessResponse(false, $"Error updating wallet: {walletResponse.Message}");
 
-            return new RiderPaymentSuccessResponse(true, "Payment processed successfully.");
+
+
+
+
+
+
+
+
+
+
+
         }
 
         private async Task<RiderPaymentSuccessResponse> HandleFailedPaymentAsync(RiderPaymentDetailsDTO paymentDetails)
         {
-            var paymentEntity = _mapper.Map<GatewayPayment>(paymentDetails);
+            var paymentEntity = _mapper.Map<GatewayPaymentTransactions>(paymentDetails);
             //save payment transaction in payment getway table as failed
             try
             {
                 await paymentGetwayRepo.AddPaymentAsync(paymentEntity);
+                await paymentGetwayRepo.SaveChangesAsync();
             }
             catch (Exception ex)
             {
