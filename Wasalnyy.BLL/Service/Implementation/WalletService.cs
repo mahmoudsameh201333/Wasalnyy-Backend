@@ -1,5 +1,6 @@
 ﻿
 using AutoMapper;
+using System;
 using Wasalnyy.BLL.DTO.Wallet;
 using Wasalnyy.BLL.Service.Abstraction;
 using Wasalnyy.DAL.Database;
@@ -15,14 +16,14 @@ namespace Wasalnyy.BLL.Service.Implementation
         private readonly WasalnyyDbContext _context;
         private readonly IMapper _mapper;
         private readonly ITripService tripService;
-        private readonly IWalletTransactionRepo walletTransactionRepo;
         private readonly IWalletMoneyTransfersService WalletMoneyTransfersService;
         private readonly RiderService riderService;
         private readonly DriverService driverService;
+        private readonly IWalletTransactionService walletTransactionService;
         public WalletService(
             IWalletRepo walletRepo,
             IWalletTransactionRepo transactionRepo,
-            WasalnyyDbContext context, IMapper mapper,ITripService tripService, IWalletTransactionRepo walletTransactionRepo, IWalletMoneyTransfersService WalletMoneyTransfersService
+            WasalnyyDbContext context, IMapper mapper,ITripService tripService, IWalletTransactionService walletTransactionService, IWalletMoneyTransfersService WalletMoneyTransfersService
             , RiderService riderService ,DriverService driverService)
         {
             _walletRepo = walletRepo;
@@ -30,7 +31,7 @@ namespace Wasalnyy.BLL.Service.Implementation
             _context = context;
             _mapper = mapper;
             this.tripService = tripService;
-            this.walletTransactionRepo= walletTransactionRepo;
+            this.walletTransactionService = walletTransactionService;
             this.WalletMoneyTransfersService = WalletMoneyTransfersService;
             this.riderService= riderService;
             this.driverService= driverService;
@@ -66,7 +67,22 @@ namespace Wasalnyy.BLL.Service.Implementation
                 wallet.Balance += increaseWalletDTO.Amount;
                 wallet.ModifiedAt = increaseWalletDTO.DateTime;
                 await _walletRepo.UpdateWalletAsync(wallet);
-               
+
+                
+              var res=  await walletTransactionService.CreateAsync(new CreateWalletTransactionDTO
+                {
+                    WalletId = wallet.Id,
+                    Amount = increaseWalletDTO.Amount,
+                    TransactionType = DAL.Enum.WalletTransactionType.Credit,
+                    Description = $"user charge his wallet by {increaseWalletDTO.Amount}",
+                    CreatedAt = increaseWalletDTO.DateTime
+
+                });
+
+                if(!res.isSuccess)
+                    return new IncreaseWalletBalanceResponse(false, $"balance value is increased but An error occurred while creating wallet transaction log: {res.Message}");
+
+
                 return new IncreaseWalletBalanceResponse(true, "Wallet balance increased successfully");
 
             }
@@ -133,25 +149,33 @@ namespace Wasalnyy.BLL.Service.Implementation
 
                 //6- create  WALLET transaction log for both wallets
 
-
-               await walletTransactionRepo.CreateAsync(new WalletTransactionLogs
+                var res = await walletTransactionService.CreateAsync(new CreateWalletTransactionDTO
                 {
                     WalletId = riderWallet.Id,
                     Amount = transferDto.Amount,
                     TransactionType = DAL.Enum.WalletTransactionType.Debit,
-                    Description = $"Trip Payment {transferDto.TripId} to driver id {transferDto.DriverId}",
+                    Description = $"user charge his wallet by {transferDto.Amount}",
                     CreatedAt = transferDto.CreatedAt
+
                 });
 
+                if (!res.isSuccess)
+                    return new TransferWalletResponse(false, $"An error occurred while creating wallet transaction log: {res.Message}");
 
-               await walletTransactionRepo.CreateAsync(new WalletTransactionLogs
+
+                var res2 = await walletTransactionService.CreateAsync(new CreateWalletTransactionDTO
                 {
-                    WalletId = driverWallet.Id,
+                    WalletId = riderWallet.Id,
                     Amount = transferDto.Amount,
-                    TransactionType = DAL.Enum.WalletTransactionType.Credit,
-                    Description = $"Trip Payment Received {transferDto.TripId} from rider id {transferDto.RiderId}",
+                    TransactionType = DAL.Enum.WalletTransactionType.Debit,
+                    Description = $"user charge his wallet by {transferDto.Amount}",
                     CreatedAt = transferDto.CreatedAt
+
                 });
+
+                if (!res2.isSuccess)
+                    return new TransferWalletResponse(false, $"An error occurred while creating wallet transaction log: {res2.Message}");
+
 
                 //7-insert this transfer transaction in the transferTransaction table
 

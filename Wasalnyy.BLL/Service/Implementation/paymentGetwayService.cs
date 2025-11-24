@@ -12,7 +12,7 @@ using Wasalnyy.DAL.Repo.Implementation;
 
 namespace Wasalnyy.BLL.Service.Implementation
 {
-	public class paymentGetway : IPaymentService
+	public class paymentGetwayService : IPaymentService
 	{
 		private readonly IConfiguration config;
 		private readonly IPaymentGetwayRepo paymentGetwayRepo;
@@ -20,7 +20,7 @@ namespace Wasalnyy.BLL.Service.Implementation
 		private readonly IWalletService	walletService;
         private readonly RiderService riderService;
         private readonly IWalletTransactionRepo walletTransactionRepo;
-        public paymentGetway(IConfiguration config, IWalletTransactionRepo walletTransactionRepo,IPaymentGetwayRepo  paymentGetwayRepo, IMapper mapper, IWalletService walletService,RiderService riderService)
+        public paymentGetwayService(IConfiguration config, IWalletTransactionRepo walletTransactionRepo,IPaymentGetwayRepo  paymentGetwayRepo, IMapper mapper, IWalletService walletService,RiderService riderService)
 		{
 			this.config = config;
 			StripeConfiguration.ApiKey = config["Stripe:SecretKey"];
@@ -104,15 +104,7 @@ namespace Wasalnyy.BLL.Service.Implementation
 
 
                 //5- log wallet transaction
-                await walletTransactionRepo.CreateAsync(new WalletTransactionLogs
-                {
-                    WalletId = riderWallet.Id,
-                    Amount = paymentDetails.Amount,
-                    TransactionType = DAL.Enum.WalletTransactionType.Credit,
-                    Description = $"user charge his wallet by {paymentDetails.Amount}",
-                    CreatedAt = dateTime
-
-                });
+               
 
                 //6-save all changes
                 await paymentGetwayRepo.SaveChangesAsync();

@@ -17,6 +17,7 @@ namespace Wasalnyy.BLL.Mapper
         {
             CreateMap<RiderPaymentDetailsDTO, GatewayPaymentTransactions>();
 
+            CreateMap<CreateWalletTransactionDTO, WalletTransactionLogs>();
 
             CreateMap<AddWalletTranferMoneyDTO, WalletMoneyTransfer>();
             CreateMap<CreateWalletDTO, Wallet>();
@@ -41,7 +42,7 @@ namespace Wasalnyy.BLL.Mapper
             // Wallet mappings
             CreateMap<Wallet, WalletDto>().ReverseMap();
 
-            CreateMap<WalletTransactionLogs, WalletTransactionDto>()
+            CreateMap<WalletTransactionLogs, AddWalletTransactionDto>()
                 .ForMember(dest => dest.TransactionType,
                            opt => opt.MapFrom(src => src.TransactionType.ToString()));
 

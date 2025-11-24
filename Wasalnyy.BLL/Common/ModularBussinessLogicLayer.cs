@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Wasalnyy.BLL.Enents;
 using Wasalnyy.BLL.EventHandlers.Abstraction;
 using Wasalnyy.BLL.Mapper;
+using Wasalnyy.BLL.Service;
 using Wasalnyy.BLL.Service.Abstraction;
 using Wasalnyy.BLL.Service.Implementation;
 using Wasalnyy.BLL.Settings;
@@ -17,6 +18,7 @@ namespace Wasalnyy.BLL.Common
     {
         public static IServiceCollection AddBussinessInPL(this IServiceCollection services, IConfiguration configuration)
         {
+            services.AddScoped<IWalletTransactionService, WalletTransactionService>();
 
             services.AddAutoMapper(x => x.AddProfile(new DomainProfile()));
 
@@ -26,15 +28,15 @@ namespace Wasalnyy.BLL.Common
 
             //Payment and wallet
             services.AddScoped<IPaymentGetwayRepo, PaymentGetwayRepo>();
-            services.AddScoped<IPaymentService, paymentGetway>();
+            services.AddScoped<IPaymentService, paymentGetwayService>();
             services.AddScoped<IWalletService, WalletService>();
             services.AddScoped<IWalletTransactionRepo, WalletTransactionRepo>();
             services.AddScoped<RiderService>(); // Or AddTransient/AddSingleton as needed
             services.AddScoped<IWalletService, WalletService>();
-            services.AddScoped<IPaymentService, paymentGetway>();
+            services.AddScoped<IPaymentService, paymentGetwayService>();
             services.AddScoped<DriverService>(); // or AddTransient/AddSingleton
             services.AddScoped<IWalletService, WalletService>();
-            services.AddScoped<IPaymentService, paymentGetway>();
+            services.AddScoped<IPaymentService, paymentGetwayService>();
             services.AddScoped<IWalletMoneyTransfersService, WalletMoneyTransfersService>();
 
 
@@ -48,7 +50,7 @@ namespace Wasalnyy.BLL.Common
             services.AddScoped<IRouteService, RouteService>();
             services.AddScoped<IWasalnyyHubService, WasalnyyHubService>();
             services.AddScoped<IAdminService, AdminService>();
-            services.AddScoped<IPaymentService, paymentGetway>();
+            services.AddScoped<IPaymentService, paymentGetwayService>();
             services.AddScoped<IPasswordService, PasswordService>();
 
             services.AddScoped<DriverServiceValidator>();

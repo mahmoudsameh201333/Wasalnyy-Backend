@@ -9,7 +9,7 @@ namespace Wasalnyy.BLL.Response
     public class IncreaseWalletBalanceResponse
     {
         public bool IsSuccess { get; set; }
-        public string Message { get; set; } = string.Empty;
+        public string Message { get; set; } 
 
 
 

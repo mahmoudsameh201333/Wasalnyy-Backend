@@ -19,6 +19,7 @@ namespace Wasalnyy.DAL.Repo.Implementation
 
         public async Task CreateAsync(WalletTransactionLogs transaction)
         {
+            transaction.Id = Guid.NewGuid();
             await _context.WalletTransactions.AddAsync(transaction);
         }
 
