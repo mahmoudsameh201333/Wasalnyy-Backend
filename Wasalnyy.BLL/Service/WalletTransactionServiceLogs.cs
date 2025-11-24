@@ -18,7 +18,7 @@ namespace Wasalnyy.BLL.Service
             _mapper = mapper;
             this.walletTransactionRepo = walletTransactionRepo;
         }
-        public async Task<CreateWalletTransactionLogResponse> CreateAsync(CreateWalletTransactionDTO createWalletTransactionDTO)
+        public async Task<CreateWalletTransactionLogResponse> CreateAsync(CreateWalletTransactionLogDTO createWalletTransactionDTO)
         {
             var walletTransaction = _mapper.Map<WalletTransactionLogs>(createWalletTransactionDTO);
             try

@@ -9,7 +9,7 @@ namespace Wasalnyy.BLL.Service.Abstraction
 {
     public interface IWalletTransactionService
     {
-        Task <CreateWalletTransactionLogResponse> CreateAsync(CreateWalletTransactionDTO createWalletTransactionDTO);
+        Task <CreateWalletTransactionLogResponse> CreateAsync(CreateWalletTransactionLogDTO createWalletTransactionDTO);
 
     }
 }

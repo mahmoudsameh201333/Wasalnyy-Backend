@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Wasalnyy.BLL.DTO.Wallet
 {
-    public class CreateWalletTransactionDTO
+    public class CreateWalletTransactionLogDTO
     {
 
         // FK → Wallet
