@@ -8,8 +8,8 @@ namespace Wasalnyy.BLL.Response
 {
     public class WithDrawFromWalletResponse
     {
-        bool IsSuccess { get; set; }
-        string Message { get; set; }
+       public bool IsSuccess { get; set; }
+       public string Message { get; set; }
         public WithDrawFromWalletResponse(bool isSuccess, string message = "")
         {
             IsSuccess = isSuccess;
