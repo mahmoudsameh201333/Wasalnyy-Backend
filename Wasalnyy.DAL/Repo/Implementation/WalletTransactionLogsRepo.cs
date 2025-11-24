@@ -8,11 +8,11 @@ using Wasalnyy.DAL.Repo.Abstraction;
 
 namespace Wasalnyy.DAL.Repo.Implementation
 {
-    public class WalletTransactionRepo : IWalletTransactionRepo
+    public class WalletTransactionLogsRepo : IWalletTransactionLogsRepo
     {
         private readonly WasalnyyDbContext _context;
 
-        public WalletTransactionRepo(WasalnyyDbContext context)
+        public WalletTransactionLogsRepo(WasalnyyDbContext context)
         {
             _context = context;
         }

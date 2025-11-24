@@ -2,7 +2,6 @@
 using AutoMapper;
 using System;
 using Wasalnyy.BLL.DTO.Wallet;
-using Wasalnyy.BLL.Service.Abstraction;
 using Wasalnyy.DAL.Database;
 using Wasalnyy.DAL.Entities;
 using Wasalnyy.DAL.Repo.Abstraction;
@@ -12,7 +11,7 @@ namespace Wasalnyy.BLL.Service.Implementation
     public class WalletService : IWalletService
     {
         private readonly IWalletRepo _walletRepo;
-        private readonly IWalletTransactionRepo _transactionRepo;
+        private readonly IWalletTransactionLogsRepo _transactionRepo;
         private readonly WasalnyyDbContext _context;
         private readonly IMapper _mapper;
         private readonly ITripService tripService;
@@ -22,7 +21,7 @@ namespace Wasalnyy.BLL.Service.Implementation
         private readonly IWalletTransactionService walletTransactionService;
         public WalletService(
             IWalletRepo walletRepo,
-            IWalletTransactionRepo transactionRepo,
+            IWalletTransactionLogsRepo transactionRepo,
             WasalnyyDbContext context, IMapper mapper,ITripService tripService, IWalletTransactionService walletTransactionService, IWalletMoneyTransfersService WalletMoneyTransfersService
             , RiderService riderService ,DriverService driverService)
         {
@@ -41,7 +40,7 @@ namespace Wasalnyy.BLL.Service.Implementation
         //   GET WALLET
         // ============================================================
 
-        public async Task<Wallet?> GetWalletByUserIdAsync(string userId)
+        public async Task<Wallet?> GetWalletOfUserIdAsync(string userId)
         {
             return await _walletRepo.GetWalletOfUserIdAsync(userId);
         }
@@ -101,7 +100,12 @@ namespace Wasalnyy.BLL.Service.Implementation
         {
 
 
-           
+           await WithdrawFromWalletAsync(new WithdrawFromWalletDto
+            {
+                UserId= transferDto.RiderId,
+                Amount= transferDto.Amount,
+                CreatedAt= transferDto.CreatedAt
+            });
             using var transaction =  await _walletRepo.BeginTransactionAsync();
 
             try
@@ -235,46 +239,52 @@ namespace Wasalnyy.BLL.Service.Implementation
         }
 
 
-        // ============================================================
-        //   WITHDRAW MONEY
-        // ============================================================
+       
 
-        //public async Task<bool> WithdrawFromWalletAsync(string userId, decimal amount, string? reference = null)
-        //{
-        //    if (amount <= 0)
-        //        return false;
+        public async Task<WithDrawFromWalletResponse> WithdrawFromWalletAsync(WithdrawFromWalletDto withdrawFromWalletDto)
 
-        //    using var transaction = await _context.Database.BeginTransactionAsync();
+        {
+            //var TransactionLog = _mapper.Map<CreateWalletTransactionDTO>(withdrawFromWalletDto);
 
-        //    var wallet = await _walletRepo.GetByUserIdAsync(userId);
-        //    if (wallet == null)
-        //        return false;
+            if (withdrawFromWalletDto.Amount <= 0)
+                return new WithDrawFromWalletResponse(false,"Amount Can't be negative or zero");
 
-        //    if (wallet.Balance < amount)
-        //        return false; // not enough money
 
-        //    wallet.Balance -= amount;
-        //    wallet.ModifiedAt = DateTime.UtcNow;
 
-        //    await _walletRepo.UpdateAsync(wallet);
 
-        //    var log = new WalletTransaction
-        //    {
-        //        WalletId = wallet.Id,
-        //        Amount = amount,
-        //        TransactionType = WalletTransactionType.Debit,
-        //        Description = reference ?? "Wallet Withdrawal",
-        //        CreatedAt = DateTime.UtcNow
-        //    };
+            var wallet = await _walletRepo.GetWalletOfUserIdAsync(withdrawFromWalletDto.UserId);
+            if (wallet == null)
+                return new WithDrawFromWalletResponse(false, "This User doesnt hvae a wallet");
 
-        //    await _transactionRepo.CreateAsync(log);
 
-        //    await _walletRepo.SaveChangesAsync();
-        //    await _transactionRepo.SaveChangesAsync();
 
-        //    await transaction.CommitAsync();
-        //    return true;
-        //}
+            if (wallet.Balance < withdrawFromWalletDto.Amount)
+               return new WithDrawFromWalletResponse(false, "Balance is not enough");
+
+
+            wallet.Balance -= withdrawFromWalletDto.Amount;
+            wallet.ModifiedAt =withdrawFromWalletDto.CreatedAt;
+
+            await _walletRepo.UpdateWalletAsync(wallet);
+
+
+            var res = await walletTransactionService.CreateAsync(new CreateWalletTransactionDTO
+            {
+                WalletId = wallet.Id,
+                Amount = withdrawFromWalletDto.Amount,
+                TransactionType = DAL.Enum.WalletTransactionType.Debit,
+                Description = $"user withdraw from his wallet by {withdrawFromWalletDto.Amount}",
+                CreatedAt = withdrawFromWalletDto.CreatedAt
+
+            });
+
+            if (!res.isSuccess)
+                return new WithDrawFromWalletResponse(false, $"Withdraw done but An error occurred while creating wallet transaction log: {res.Message}");
+
+
+           return new WithDrawFromWalletResponse(true, "Withdraw from wallet done successfully");
+
+        }
 
 
         // ============================================================

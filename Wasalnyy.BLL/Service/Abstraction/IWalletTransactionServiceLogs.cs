@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Wasalnyy.BLL.DTO.Wallet;
 
-namespace Wasalnyy.BLL.Service.Implementation
+namespace Wasalnyy.BLL.Service.Abstraction
 {
     public interface IWalletTransactionService
     {

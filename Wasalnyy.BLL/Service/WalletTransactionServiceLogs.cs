@@ -8,12 +8,12 @@ using Wasalnyy.BLL.DTO.Wallet;
 
 namespace Wasalnyy.BLL.Service
 {
-    public class WalletTransactionService : IWalletTransactionService
+    public class WalletTransactionServiceLogs : IWalletTransactionService
     {
         private readonly IMapper _mapper;
-        private readonly IWalletTransactionRepo walletTransactionRepo;
+        private readonly IWalletTransactionLogsRepo walletTransactionRepo;
 
-        public WalletTransactionService(IMapper mapper, IWalletTransactionRepo walletTransactionRepo)
+        public WalletTransactionServiceLogs(IMapper mapper, IWalletTransactionLogsRepo walletTransactionRepo)
         {
             _mapper = mapper;
             this.walletTransactionRepo = walletTransactionRepo;

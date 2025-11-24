@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Wasalnyy.DAL.Repo.Abstraction
 {
-    public interface IWalletTransactionRepo
+    public interface IWalletTransactionLogsRepo
     {
         Task CreateAsync(WalletTransactionLogs transaction);
         Task<IEnumerable<WalletTransactionLogs>> GetByWalletIdAsync(Guid walletId);

@@ -6,8 +6,6 @@ using Wasalnyy.BLL.Enents;
 using Wasalnyy.BLL.EventHandlers.Abstraction;
 using Wasalnyy.BLL.Mapper;
 using Wasalnyy.BLL.Service;
-using Wasalnyy.BLL.Service.Abstraction;
-using Wasalnyy.BLL.Service.Implementation;
 using Wasalnyy.BLL.Settings;
 using Wasalnyy.BLL.Validators;
 using Wasalnyy.DAL.Repo.Implementation;
@@ -18,7 +16,7 @@ namespace Wasalnyy.BLL.Common
     {
         public static IServiceCollection AddBussinessInPL(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddScoped<IWalletTransactionService, WalletTransactionService>();
+            services.AddScoped<IWalletTransactionService, WalletTransactionServiceLogs>();
 
             services.AddAutoMapper(x => x.AddProfile(new DomainProfile()));
 
@@ -30,7 +28,7 @@ namespace Wasalnyy.BLL.Common
             services.AddScoped<IPaymentGetwayRepo, PaymentGetwayRepo>();
             services.AddScoped<IPaymentService, paymentGetwayService>();
             services.AddScoped<IWalletService, WalletService>();
-            services.AddScoped<IWalletTransactionRepo, WalletTransactionRepo>();
+            services.AddScoped<IWalletTransactionLogsRepo, WalletTransactionLogsRepo>();
             services.AddScoped<RiderService>(); // Or AddTransient/AddSingleton as needed
             services.AddScoped<IWalletService, WalletService>();
             services.AddScoped<IPaymentService, paymentGetwayService>();
