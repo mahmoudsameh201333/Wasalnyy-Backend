@@ -2,11 +2,7 @@
 
 namespace Wasalnyy.DAL.Entities
 {
-<<<<<<<< HEAD:Wasalnyy.DAL/Entities/WalletTransaction.cs
-    public class WalletTransaction
-========
-    public class CreateWalletTransactionLogDTO
->>>>>>>> 6f7b02c18388453ec0ef2c3ec5e3ba9ae73364cc:Wasalnyy.BLL/DTO/Wallet/CreateWalletTransactionLogDTO.cs
+    public class WalletTransactionLogs
     {
         public Guid Id { get; set; }
 
@@ -24,6 +20,6 @@ namespace Wasalnyy.DAL.Entities
         public string? Description { get; set; }
 
         // Timestamp
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } 
     }
 }

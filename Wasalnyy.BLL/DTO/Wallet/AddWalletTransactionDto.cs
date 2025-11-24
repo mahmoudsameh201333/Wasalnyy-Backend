@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Wasalnyy.BLL.DTO.Wallet
 {
-    public class WalletTransactionDto
+    public class AddWalletTransactionDto
     {
         public Guid Id { get; set; }
         public Guid WalletId { get; set; }

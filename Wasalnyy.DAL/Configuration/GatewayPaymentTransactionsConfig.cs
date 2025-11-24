@@ -4,10 +4,11 @@ using Wasalnyy.DAL.Entities;
 
 namespace Wasalnyy.DAL.Configuration
 {
-    public class GatewayPaymentConfig : IEntityTypeConfiguration<GatewayPayment>
+    public class GatewayPaymentTransactionsConfig : IEntityTypeConfiguration<GatewayPaymentTransactions>
     {
-        public void Configure(EntityTypeBuilder<GatewayPayment> builder)
+        public void Configure(EntityTypeBuilder<GatewayPaymentTransactions> builder)
         {
+            builder.ToTable("GatewayPaymentTransactions");
             builder.HasKey(p => p.Id);
 
             builder.Property(p => p.TransactionId)

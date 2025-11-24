@@ -15,6 +15,7 @@ namespace Wasalnyy.BLL.Enents
         public event TripDel? TripStarted;
         public event TripDel? TripEnded;
         public event TripDel? TripCanceled;
+        public event TripDel? TripConfirmed;
         public void FireTripRequested(TripDto dto)
         {
             TripRequested?.Invoke(dto);
@@ -34,6 +35,11 @@ namespace Wasalnyy.BLL.Enents
         public void FireTripCanceled(TripDto dto)
         {
             TripCanceled?.Invoke(dto).Wait();
+        }
+
+        public void FireTripConfirmed(TripDto dto)
+        {
+            TripConfirmed?.Invoke(dto).Wait();
         }
     }
 }

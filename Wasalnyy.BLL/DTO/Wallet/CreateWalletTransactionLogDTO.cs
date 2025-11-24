@@ -1,6 +1,10 @@
-﻿
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace Wasalnyy.DAL.Entities
+namespace Wasalnyy.BLL.DTO.Wallet
 {
 <<<<<<<< HEAD:Wasalnyy.DAL/Entities/WalletTransaction.cs
     public class WalletTransaction
@@ -24,6 +28,7 @@ namespace Wasalnyy.DAL.Entities
         public string? Description { get; set; }
 
         // Timestamp
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; }
+        
     }
 }

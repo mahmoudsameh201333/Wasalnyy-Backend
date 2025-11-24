@@ -5,8 +5,7 @@ using Microsoft.Extensions.Options;
 using Wasalnyy.BLL.Enents;
 using Wasalnyy.BLL.EventHandlers.Abstraction;
 using Wasalnyy.BLL.Mapper;
-using Wasalnyy.BLL.Service.Abstraction;
-using Wasalnyy.BLL.Service.Implementation;
+using Wasalnyy.BLL.Service;
 using Wasalnyy.BLL.Settings;
 using Wasalnyy.BLL.Validators;
 using Wasalnyy.DAL.Repo.Implementation;
@@ -17,16 +16,29 @@ namespace Wasalnyy.BLL.Common
     {
         public static IServiceCollection AddBussinessInPL(this IServiceCollection services, IConfiguration configuration)
         {
+            services.AddScoped<IWalletTransactionService, WalletTransactionServiceLogs>();
 
             services.AddAutoMapper(x => x.AddProfile(new DomainProfile()));
 
-            //Payment 
-            
-            services.AddScoped<IPaymentGetwayRepo, PaymentGetwayRepo>();
-            services.AddScoped<IPaymentService, PaymentService>();
-            services.AddScoped<IWalletService, WalletService>();
-            services.AddScoped<IWalletTransactionRepo, WalletTransactionRepo>(); 
+            services.AddScoped<IWalletMoneyTransfersService, WalletMoneyTransfersService>();
 
+
+
+            //Payment and wallet
+            services.AddScoped<IPaymentGetwayRepo, PaymentGetwayRepo>();
+            services.AddScoped<IPaymentService, paymentGetwayService>();
+            services.AddScoped<IWalletService, WalletService>();
+            services.AddScoped<IWalletTransactionLogsRepo, WalletTransactionLogsRepo>();
+            services.AddScoped<RiderService>(); // Or AddTransient/AddSingleton as needed
+            services.AddScoped<IWalletService, WalletService>();
+            services.AddScoped<IPaymentService, paymentGetwayService>();
+            services.AddScoped<DriverService>(); // or AddTransient/AddSingleton
+            services.AddScoped<IWalletService, WalletService>();
+            services.AddScoped<IPaymentService, paymentGetwayService>();
+            services.AddScoped<IWalletMoneyTransfersService, WalletMoneyTransfersService>();
+
+
+            services.AddScoped<IWalletMoneyTransfersRepo, WalletMoneyTransfersRepo>();
             // Register services
             services.AddScoped<IDriverService, DriverService>();
             services.AddScoped<ITripService, TripService>();
@@ -36,7 +48,7 @@ namespace Wasalnyy.BLL.Common
             services.AddScoped<IRouteService, RouteService>();
             services.AddScoped<IWasalnyyHubService, WasalnyyHubService>();
             services.AddScoped<IAdminService, AdminService>();
-            services.AddScoped<IPaymentService, PaymentService>();
+            services.AddScoped<IPaymentService, paymentGetwayService>();
             services.AddScoped<IPasswordService, PasswordService>();
 
             services.AddScoped<DriverServiceValidator>();
@@ -101,6 +113,7 @@ namespace Wasalnyy.BLL.Common
             tripEvents.TripStarted += tripHandler.OnTripStarted;
             tripEvents.TripEnded += tripHandler.OnTripEnded;
             tripEvents.TripCanceled += tripHandler.OnTripCanceled;
+            tripEvents.TripConfirmed += tripHandler.OnTripConfirmed;
 
 
 

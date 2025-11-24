@@ -4,16 +4,15 @@ using System;
 using Wasalnyy.BLL.DTO.Driver;
 using Wasalnyy.BLL.DTO.Wallet;
 using Wasalnyy.DAL.Database;
+using Wasalnyy.DAL.Entities;
 using Wasalnyy.DAL.Repo.Abstraction;
-
-using Wasalnyy.BLL.DTO.Wallet;
-using AutoMapper;
+using Wasalnyy.DAL.Repo.Implementation;
 namespace Wasalnyy.BLL.Service.Implementation
 {
     public class WalletService : IWalletService
     {
         private readonly IWalletRepo _walletRepo;
-        private readonly IWalletTransactionRepo _transactionRepo;
+        private readonly IWalletTransactionLogsRepo _transactionRepo;
         private readonly WasalnyyDbContext _context;
         private readonly IMapper _mapper;
         private readonly ITripRepo tripRepo;
@@ -42,9 +41,9 @@ namespace Wasalnyy.BLL.Service.Implementation
         //   GET WALLET
         // ============================================================
 
-        public async Task<Wallet?> GetWalletByUserIdAsync(string userId)
+        public async Task<Wallet?> GetWalletOfUserIdAsync(string userId)
         {
-            return await _walletRepo.GetByUserIdAsync(userId);
+            return await _walletRepo.GetWalletOfUserIdAsync(userId);
         }
 
 
@@ -52,21 +51,39 @@ namespace Wasalnyy.BLL.Service.Implementation
         //   ADD MONEY TO WALLET
         // ============================================================
 
-        public async Task<IncreaseWalletBalanceResponse> IncreaseWalletAsync(string userId, decimal amount)
+        public async Task<IncreaseWalletBalanceResponse> IncreaseWalletAsync(IncreaseWalletDTO increaseWalletDTO)
         {
 
-            if (amount <= 0)
+
+            if (increaseWalletDTO.Amount <= 0)
                 return new IncreaseWalletBalanceResponse(false ,"Amount of money cant be negative or zero");
 
 
             try
             {
-                var wallet = await _walletRepo.GetByUserIdAsync(userId);
+                var wallet = await _walletRepo.GetWalletOfUserIdAsync(increaseWalletDTO.UserId);
                 if (wallet == null)
                     return new IncreaseWalletBalanceResponse(false, "This User doesnt have Wallet Call Dev to make sure Rider or driver User have wallet created");
-                wallet.Balance += amount;
-                wallet.ModifiedAt = DateTime.Now;
-                await _walletRepo.UpdateAsync(wallet);
+                wallet.Balance += increaseWalletDTO.Amount;
+                wallet.ModifiedAt = increaseWalletDTO.DateTime;
+                await _walletRepo.UpdateWalletAsync(wallet);
+
+                
+              var res=  await walletTransactionService.CreateAsync(new CreateWalletTransactionLogDTO
+                {
+                    WalletId = wallet.Id,
+                    Amount = increaseWalletDTO.Amount,
+                    TransactionType = DAL.Enum.WalletTransactionType.Credit,
+                    Description = $"user charge his wallet by {increaseWalletDTO.Amount}",
+                    CreatedAt = increaseWalletDTO.DateTime
+
+                });
+
+                if(!res.isSuccess)
+                    return new IncreaseWalletBalanceResponse(false, $"balance value is increased but An error occurred while creating wallet transaction log: {res.Message}");
+
+
+                return new IncreaseWalletBalanceResponse(true, "Wallet balance increased successfully");
 
                 
               var res=  await walletTransactionService.CreateAsync(new CreateWalletTransactionLogDTO
@@ -92,25 +109,13 @@ namespace Wasalnyy.BLL.Service.Implementation
                 return new IncreaseWalletBalanceResponse(false, $"An error occurred while processing payment: {innerMessage}");
             }
 
+         
 
-            return new IncreaseWalletBalanceResponse(true, "Wallet balance increased successfully");
-            //var log = new WalletTransaction
-            //{
-            //    WalletId = wallet.Id,
-            //    Amount = amount,
-            //    TransactionType = WalletTransactionType.Credit,
-            //    Description = reference ?? "Wallet Top-Up",
-            //    CreatedAt = DateTime.UtcNow
-            //};
-
-            //await _transactionRepo.CreateAsync(log);
-
-            //await _walletRepo.SaveChangesAsync();
-            //await _transactionRepo.SaveChangesAsync();
-
-            //return true;
+           
         }
 
+        public async Task<TransferWalletResponse> HandleTransferWalletMoneyFromRiderToDriver(TransferMoneyBetweenUsersDTO transferDto)
+        {
 
             int x = 0;
             DriverRepo driverRepo = new DriverRepo(_context);
@@ -191,7 +196,7 @@ namespace Wasalnyy.BLL.Service.Implementation
                     Description = $"Driver recieve {transferDto.Amount} for trip ID {trip.Id} from Rider Id{rider.RiderId}",
                     CreatedAt = transferDto.CreatedAt
 
-            using var transaction = await _context.Database.BeginTransactionAsync();
+                });
 
                 if (!res2.isSuccess)
                 {
@@ -200,13 +205,16 @@ namespace Wasalnyy.BLL.Service.Implementation
                     return new TransferWalletResponse(false, $"Transfering failed An error occurred while creating wallet transaction log: {res2.Message}");
                 }
 
-            wallet.Balance -= amount;
-            wallet.ModifiedAt = DateTime.UtcNow;
+                //7-insert this transfer transaction in the transferTransaction table
 
               var res3=  await WalletMoneyTransfersService.AddAsync(new AddWalletTranferMoneyDTO
                 {
 
-            await _transactionRepo.CreateAsync(log);
+                    CreatedAt = transferDto.CreatedAt,
+                    Amount = transferDto.Amount,
+                    SenderWalletId = riderWallet.Id,
+                    ReceiverWalletId = driverWallet.Id,
+                    TripId = transferDto.TripId,
 
                 });
 
@@ -220,51 +228,56 @@ namespace Wasalnyy.BLL.Service.Implementation
                 // 8- save all changes
                 await _walletRepo.SaveChangesAsync();
 
-            await transaction.CommitAsync();
-            return true;
+                // 9- commit
+                await transaction.CommitAsync();
+
+                return new TransferWalletResponse(true, "Transfer completed successfully");
+            }
+            catch (Exception ex)
+            {
+                // rollback
+                await transaction.RollbackAsync();
+
+                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                return new TransferWalletResponse(false, $"Transaction failed: {innerMessage}");
+            }
+
+
+           
+
+        }
+
+        public async Task<CreateWalletResponse> CreateWalletAsync(CreateWalletDTO createWalletDTO)
+        {
+            // Map DTO to entity
+            var wallet = _mapper.Map<Wallet>(createWalletDTO);
+
+            // Save to repository
+            try
+            {
+                await _walletRepo.CreateAsync(wallet);
+                await _walletRepo.SaveChangesAsync();
+                return new CreateWalletResponse(true, "Wallet Created succesfully ");
+            }
+            catch  (Exception ex)
+            {
+                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                return new CreateWalletResponse(false, $"Creating Wallet Failed: {innerMessage}");
+
+            }
         }
 
 
-        // ============================================================
-        //   TRANSFER (Rider -> Driver)
-        // ============================================================
+       
 
-        public async Task<bool> TransferAsync(string fromUserId, string toUserId, decimal amount, string? tripId = null)
+        public async Task<WithDrawFromWalletResponse> WithdrawFromWalletAsync(WithdrawFromWalletDto withdrawFromWalletDto)
+
         {
-            if (amount <= 0)
-                return false;
+            //var TransactionLog = _mapper.Map<CreateWalletTransactionDTO>(withdrawFromWalletDto);
 
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            if (withdrawFromWalletDto.Amount <= 0)
+                return new WithDrawFromWalletResponse(false,"Amount Can't be negative or zero");
 
-            var senderWallet = await _walletRepo.GetByUserIdAsync(fromUserId);
-            var receiverWallet = await _walletRepo.GetByUserIdAsync(toUserId);
-
-            if (senderWallet == null || receiverWallet == null)
-                return false;
-
-            if (senderWallet.Balance < amount)
-                return false;
-
-            // Sender
-            senderWallet.Balance -= amount;
-            senderWallet.ModifiedAt = DateTime.UtcNow;
-            await _walletRepo.UpdateAsync(senderWallet);
-
-            var senderLog = new WalletTransaction
-            {
-                WalletId = senderWallet.Id,
-                Amount = amount,
-                TransactionType = WalletTransactionType.Debit,
-                Description = $"Trip Payment {tripId}",
-                CreatedAt = DateTime.UtcNow
-            };
-            await _transactionRepo.CreateAsync(senderLog);
-
-
-            // Receiver
-            receiverWallet.Balance += amount;
-            receiverWallet.ModifiedAt = DateTime.UtcNow;
-            await _walletRepo.UpdateAsync(receiverWallet);
 
 
 
@@ -286,29 +299,91 @@ namespace Wasalnyy.BLL.Service.Implementation
 
             var res = await walletTransactionService.CreateAsync(new CreateWalletTransactionLogDTO
             {
-                WalletId = receiverWallet.Id,
-                Amount = amount,
-                TransactionType = WalletTransactionType.Credit,
-                Description = $"Trip Payment Received {tripId}",
-                CreatedAt = DateTime.UtcNow
-            };
-            await _transactionRepo.CreateAsync(receiverLog);
+                WalletId = wallet.Id,
+                Amount = withdrawFromWalletDto.Amount,
+                TransactionType = DAL.Enum.WalletTransactionType.Debit,
+                Description = $"user withdraw from his wallet by {withdrawFromWalletDto.Amount}",
+                CreatedAt = withdrawFromWalletDto.CreatedAt
 
-            await _walletRepo.SaveChangesAsync();
-            await _transactionRepo.SaveChangesAsync();
+            });
 
-            await transaction.CommitAsync();
-            return true;
+            if (!res.isSuccess)
+                return new WithDrawFromWalletResponse(false, $"Withdraw done but An error occurred while creating wallet transaction log: {res.Message}");
+
+
+           return new WithDrawFromWalletResponse(true, "Withdraw from wallet done successfully");
+
         }
 
-     
+
+        // ============================================================
+        //   TRANSFER (Rider -> Driver)
+        // ============================================================
+
+        //public async Task<bool> TransferAsync(string fromUserId, string toUserId, decimal amount, string? tripId = null)
+        //{
+        //    if (amount <= 0)
+        //        return false;
+
+        //    using var transaction = await _context.Database.BeginTransactionAsync();
+
+        //    var senderWallet = await _walletRepo.GetByUserIdAsync(fromUserId);
+        //    var receiverWallet = await _walletRepo.GetByUserIdAsync(toUserId);
+
+        //    if (senderWallet == null || receiverWallet == null)
+        //        return false;
+
+        //    if (senderWallet.Balance < amount)
+        //        return false;
+
+        //    // Sender
+        //    senderWallet.Balance -= amount;
+        //    senderWallet.ModifiedAt = DateTime.UtcNow;
+        //    await _walletRepo.UpdateAsync(senderWallet);
+
+        //    var senderLog = new WalletTransaction
+        //    {
+        //        WalletId = senderWallet.Id,
+        //        Amount = amount,
+        //        TransactionType = WalletTransactionType.Debit,
+        //        Description = $"Trip Payment {tripId}",
+        //        CreatedAt = DateTime.UtcNow
+        //    };
+        //    await _transactionRepo.CreateAsync(senderLog);
+
+
+        //    // Receiver
+        //    receiverWallet.Balance += amount;
+        //    receiverWallet.ModifiedAt = DateTime.UtcNow;
+        //    await _walletRepo.UpdateAsync(receiverWallet);
+
+        //    var receiverLog = new WalletTransaction
+        //    {
+        //        WalletId = receiverWallet.Id,
+        //        Amount = amount,
+        //        TransactionType = WalletTransactionType.Credit,
+        //        Description = $"Trip Payment Received {tripId}",
+        //        CreatedAt = DateTime.UtcNow
+        //    };
+        //    await _transactionRepo.CreateAsync(receiverLog);
+
+        //    await _walletRepo.SaveChangesAsync();
+        //    await _transactionRepo.SaveChangesAsync();
+
+        //    await transaction.CommitAsync();
+        //    return true;
+        //}
+
+
 
 
         public async Task<bool> CheckUserBalanceAsync(string userId, decimal amount)
         {
             var wallet = await _walletRepo.GetWalletOfUserIdAsync(userId);
 
-        
+            return wallet != null && wallet.Balance >= amount;
+            
+        }
     }
 }
 
