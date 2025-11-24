@@ -3,6 +3,7 @@
 	public enum TripStatus
 	{
 		Requested,
+		Confirmed,
         Accepted,
 		Started,
 		Ended,

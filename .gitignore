@@ -44,3 +44,5 @@ publish/
 *.bak
 *.Cache/
 *.config.user
+
+Wasalnyy.PL/appsettings.json

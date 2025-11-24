@@ -20,8 +20,8 @@ namespace Wasalnyy.PL.Controllers
 		[HttpPost("create-session")]
 		public async Task<IActionResult> CreateSession([FromBody] decimal amount)
 		{
-			var successUrl = "http://localhost:4200/choose-user-type";
-			var cancelUrl = "http://localhost:4200/driver-dashboard";
+			var successUrl = $"http://localhost:4200/payment-successful?amount={amount}&session_id={{CHECKOUT_SESSION_ID}}";
+			var cancelUrl = "http://localhost:4200/payment-failed";
 			var sessionUrl = await _paymentService.CreatePaymentSession(amount, "usd", successUrl, cancelUrl);
 			return Ok(new { url = sessionUrl });
 		}
