@@ -22,15 +22,15 @@ namespace Wasalnyy.PL
 		{
 			var builder = WebApplication.CreateBuilder(args);
 
-			builder.Services.AddCors(options =>
-			{
-				options.AddPolicy("AllowAll", policy =>
-				{
-					policy.AllowAnyOrigin()
-						  .AllowAnyMethod()
-						  .AllowAnyHeader();
-				});
-			});
+			//builder.Services.AddCors(options =>
+			//{
+			//	options.AddPolicy("AllowAll", policy =>
+			//	{
+			//		policy.AllowAnyOrigin()
+			//			  .AllowAnyMethod()
+			//			  .AllowAnyHeader();
+			//	});
+			//});
 
 			// Add services to the container.
 			builder.Services.AddControllers();
@@ -105,12 +105,14 @@ namespace Wasalnyy.PL
 				app.UseSwaggerUI();
 			}
 			app.UseHttpsRedirection();
-			app.UseCors("CorsPolicy");
+            app.UseRouting();
+            app.UseCors("CorsPolicy");
 			app.UseAuthentication();
 			app.UseAuthorization();
 			app.UseStaticFiles();
 			app.UseMiddleware<ExptionhandlingMiddleware>();
-			app.MapHub<WasalnyyHub>("/Wasalnyy");
+            app.UseWebSockets();
+            app.MapHub<WasalnyyHub>("/Wasalnyy");
 			app.MapControllers();
 			app.Run();
 		}

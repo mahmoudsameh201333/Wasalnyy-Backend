@@ -83,7 +83,31 @@ namespace Wasalnyy.BLL.Common
 					ValidAudience = jwtSettings.Audience,
 					IssuerSigningKey = new SymmetricSecurityKey(key)
 				};
-			});
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        var path = context.HttpContext.Request.Path;
+
+                        // If the request is for our SignalR hub
+                        if (!string.IsNullOrEmpty(accessToken) &&
+                            path.StartsWithSegments("/Wasalnyy"))
+                        {
+                            // Read the token from the query string
+                            context.Token = accessToken;
+                        }
+
+                        return Task.CompletedTask;
+                    },
+                    OnAuthenticationFailed = context =>
+                    {
+                        // Log authentication failures for debugging
+                        Console.WriteLine($"Authentication failed: {context.Exception.Message}");
+                        return Task.CompletedTask;
+                    }
+                };
+            });
 
 
             services.Configure<PricingSettings>(configuration.GetSection("PricingSettings"));
