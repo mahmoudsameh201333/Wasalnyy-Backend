@@ -138,6 +138,16 @@ namespace Wasalnyy.PL.EventHandlers.Implementation
         public async Task OnTripConfirmed(TripDto dto)
         {
             await _hubContext.Clients.Group($"driversAvailableInZone_{dto.ZoneId}").SendAsync("availableTripsInZone", dto);
+
+            var _connectionService = _serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<IWasalnyyHubService>();
+
+            var riderConIds = await _connectionService.GetAllUserConnectionsAsync(dto.RiderId);
+
+            foreach (var conId in riderConIds)
+            {
+                await _hubContext.Clients.Client(conId).SendAsync("tripConfirmed", dto);
+            }
+
         }
     }
 }
