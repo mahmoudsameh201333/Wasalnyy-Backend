@@ -13,7 +13,7 @@ namespace Wasalnyy.BLL.EventHandlers.Abstraction
         Task OnTripAccepted(TripDto dto);
         Task OnTripStarted(TripDto dto);
         Task OnTripEnded(TripDto dto);
-        Task OnTripCanceled(TripDto dto);
+        Task OnTripCanceled(TripDto dto, TripStatus oldStatus, CashCancelationFees? cashCancelationFees);
         Task OnTripConfirmed(TripDto dto);
     }
 }

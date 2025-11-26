@@ -63,6 +63,14 @@ namespace Wasalnyy.BLL.Mapper
 
             CreateMap<Trip, TripDto>();
 
+
+            CreateMap<Trip, TransferMoneyBetweenUsersDTO>()
+                .ForMember(dest => dest.DriverId, opt => opt.MapFrom(src => src.DriverId))
+                .ForMember(dest => dest.RiderId, opt => opt.MapFrom(src => src.RiderId))
+                .ForMember(dest => dest.Amount, opt => opt.MapFrom(src => src.Price))
+                .ForMember(dest => dest.TripId, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow));
+
             CreateMap<CreateZoneDto, Zone>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(_ => Guid.NewGuid()))
                 .ForMember(dest => dest.Coordinates, opt => opt.MapFrom(src => src.Coordinates));

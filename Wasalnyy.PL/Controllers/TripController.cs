@@ -88,5 +88,19 @@ namespace Wasalnyy.PL.Controllers
             return Ok();
         }
 
+
+        [HttpPost("CancelTrip/{tripId}")]
+        [Authorize(Roles = "Driver,Rider")]
+        public async Task<IActionResult> CancelTripAsync([FromRoute] Guid tripId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+                return Unauthorized();
+
+            await _tripService.CancelTripAsync(userId, tripId);
+            return Ok();
+        }
+
     }
 }
