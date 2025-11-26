@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace Wasalnyy.BLL.Exceptions
 {
-    public class WalletBalanceNotSufficantException : Exception
+    public class WalletTransferException : Exception
     {
-        public WalletBalanceNotSufficantException(string? message) : base(message)
+        public WalletTransferException(string? message) : base(message)
         {
         }
     }
