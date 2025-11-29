@@ -17,7 +17,8 @@
         public Coordinates? CurrentCoordinates { get; set; }
         public Coordinates PickupCoordinates { get; set; }
         public Coordinates DistinationCoordinates { get; set; }
-
+		public string? PickUpName { get; set; }
+		public string? DestinationName { get; set; }
 		public string? DriverId { get; set; }
 		public Driver? Driver { get; set; }
 		public string RiderId { get; set; }

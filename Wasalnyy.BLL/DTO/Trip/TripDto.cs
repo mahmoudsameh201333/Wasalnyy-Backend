@@ -23,5 +23,7 @@ namespace Wasalnyy.BLL.DTO.Trip
         public string? DriverId { get; set; }
         public string RiderId { get; set; }
         public Guid ZoneId { get; set; }
-    }
+		public string? PickUpName { get; set; }
+		public string? DestinationName { get; set; }
+	}
 }

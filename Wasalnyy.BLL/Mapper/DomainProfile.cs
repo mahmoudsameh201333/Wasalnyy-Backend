@@ -54,7 +54,9 @@ namespace Wasalnyy.BLL.Mapper
                 .ForMember(dest => dest.DistinationCoordinates, opt => opt.MapFrom(src => src.DistinationCoordinates))
                 .ForMember(dest => dest.RequestedDate, opt => opt.MapFrom(_ => DateTime.UtcNow))
                 .ForMember(dest => dest.TripStatus, opt => opt.MapFrom(_ => TripStatus.Requested))
-                .ForMember(dest => dest.Id, opt => opt.MapFrom(_ => Guid.NewGuid()));
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(_ => Guid.NewGuid()))
+                .ForMember(dest => dest.PickUpName, opt => opt.MapFrom(src => src.PickUpName))
+	            .ForMember(dest => dest.DestinationName, opt => opt.MapFrom(src => src.DestinationName));
 
             CreateMap<Trip, CalculatePriceDto>()
                 .ForMember(dest => dest.DistanceKm, opt => opt.MapFrom(src => src.DistanceKm))
