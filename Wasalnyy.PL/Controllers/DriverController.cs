@@ -159,19 +159,15 @@ namespace Wasalnyy.PL.Controllers
             var tripsCount = await _driverService.GetTotalCompletedTripsAsync(driverId);
             return Ok(tripsCount);
         }
-        
+
         [HttpGet("Profile")]
-        public async Task<IActionResult> GetDriverProfile()
+        public async Task<IActionResult> GetProfileAsync()
         {
             var driverId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (driverId == null)
                 return Unauthorized();
 
             var driver = await _driverService.GetByIdAsync(driverId);
-
-            if (driver == null)
-                return NotFound(new { Message = "Driver not found." });
-
             return Ok(driver);
         }
     }
