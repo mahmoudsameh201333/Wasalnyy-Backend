@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Wasalnyy.BLL.DTO.Rider;
 using Wasalnyy.BLL.Service.Abstraction;
+using Wasalnyy.BLL.Service.Implementation;
 
 namespace Wasalnyy.PL.Controllers
 {
@@ -12,13 +13,15 @@ namespace Wasalnyy.PL.Controllers
     public class RiderController : ControllerBase
     {
         private readonly IRiderService _riderService;
+        private readonly IDriverService _driverService;
 
-        public RiderController(IRiderService riderService)
+        public RiderController(IRiderService riderService,IDriverService driverService)
         {
             _riderService = riderService;
+            _driverService = driverService;
         }
 
-      
+
 
         [HttpGet("Profile")]
         public async Task<IActionResult> GetProfileAsync()
@@ -86,6 +89,15 @@ namespace Wasalnyy.PL.Controllers
                 return NotFound(new { Message = "Rider not found." });
 
             return Ok(new { Message = "Rider information updated successfully." });
+        }
+        [HttpPost("DriverData")]
+        public async Task<IActionResult> GetDriverDataAsync([FromBody] string driverId)
+        {
+            var driver = await _driverService.GetByIdAsync(driverId);
+            if (driver == null)
+               return Unauthorized();
+
+            return Ok(driver);
         }
     }
 }
