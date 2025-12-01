@@ -159,7 +159,6 @@ namespace Wasalnyy.PL.Controllers
             var tripsCount = await _driverService.GetTotalCompletedTripsAsync(driverId);
             return Ok(tripsCount);
         }
-
         [HttpGet("Profile")]
         public async Task<IActionResult> GetProfileAsync()
         {
