@@ -56,7 +56,7 @@ namespace Wasalnyy.BLL.Service.Implementation
                 throw new NotFoundException("Trip not found");
 
            
-            if (tripDto.TripStatus != TripStatus.Ended)
+            if (tripDto.TripStatus != "Ended")
                 throw new ValidationException("You can only complain about completed trips");
 
             

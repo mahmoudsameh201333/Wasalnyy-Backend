@@ -30,11 +30,9 @@ namespace Wasalnyy.PL.Controllers
             return User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         }
 
-        // ============= CREATE REVIEW =============
 
-        // POST: api/reviews/add
         [HttpPost("add")]
-        [Authorize]
+        [Authorize(Roles = "Driver,Rider")]
         public async Task<ActionResult<ReturnReviewDto>> AddReview([FromBody] CreateReviewDto dto)
         {
             // Check if data is valid
@@ -66,9 +64,7 @@ namespace Wasalnyy.PL.Controllers
             }
         }
 
-        // ============= READ REVIEWS =============
 
-        // GET: api/reviews/driver/{driverId}
         [HttpGet("driver/{driverId}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetDriverReviews(string driverId)

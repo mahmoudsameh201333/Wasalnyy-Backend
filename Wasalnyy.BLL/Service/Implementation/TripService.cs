@@ -79,7 +79,7 @@ namespace Wasalnyy.BLL.Service.Implementation
             (trip.DistanceKm, trip.DurationMinutes) = await _routeService.CalculateDistanceAndDurationAsync(trip.PickupCoordinates, trip.DistinationCoordinates);
             trip.Price = _pricingService.CalculatePrice(_mapper.Map<Trip, CalculatePriceDto>(trip));
 
-            if (dto.PaymentMethod == PaymentMethod.Wallet.ToString() && !await _walletService.CheckUserBalanceAsync(riderId, (decimal)trip.Price))
+            if (dto.PaymentMethod == PaymentMethod.Wallet && !await _walletService.CheckUserBalanceAsync(riderId, (decimal)trip.Price))
                 throw new WalletBalanceNotSufficientException($"Your wallet balance not sufficient");
 
             await _tripRepo.CreateTripAsync(trip);
