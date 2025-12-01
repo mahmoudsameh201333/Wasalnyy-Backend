@@ -55,7 +55,7 @@ namespace Wasalnyy.BLL.Service.Implementation
             }
 
             // Check trip is completed
-            if (tripDto.TripStatus != TripStatus.Ended)
+            if (tripDto.TripStatus != "Ended")
                 throw new ValidationException("You cannot review a trip that is not completed.");
 
             // Check for duplicate review

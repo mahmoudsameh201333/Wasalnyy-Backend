@@ -253,11 +253,5 @@ namespace Wasalnyy.PL.Controllers
         }
     }
 
-    /// <summary>
-    /// DTO to update complaint status
-    /// </summary>
-    public class UpdateComplaintStatusDto
-    {
-        public ComplaintStatus Status { get; set; }
-    }
+  
 }

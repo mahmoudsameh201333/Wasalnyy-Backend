@@ -22,7 +22,7 @@ namespace Wasalnyy.PL.Controllers
             _tripService = tripService;
         }
 
-        
+
 
         [HttpPost("SetAsAvailable")]
         public async Task<IActionResult> SetAsAvailableAsync([FromBody] Coordinates coordinate)
@@ -158,6 +158,21 @@ namespace Wasalnyy.PL.Controllers
 
             var tripsCount = await _driverService.GetTotalCompletedTripsAsync(driverId);
             return Ok(tripsCount);
+        }
+        
+        [HttpGet("Profile")]
+        public async Task<IActionResult> GetDriverProfile()
+        {
+            var driverId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (driverId == null)
+                return Unauthorized();
+
+            var driver = await _driverService.GetByIdAsync(driverId);
+
+            if (driver == null)
+                return NotFound(new { Message = "Driver not found." });
+
+            return Ok(driver);
         }
     }
 }

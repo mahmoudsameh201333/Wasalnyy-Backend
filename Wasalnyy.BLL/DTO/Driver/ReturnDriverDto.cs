@@ -15,5 +15,7 @@ namespace Wasalnyy.BLL.DTO.Driver
         public VehicleDto Vehicle { get; set; }
         public Coordinates? Coordinates { get; set; }
         public string DriverStatus { get; set; }
+        public string Email { get; set; }
+        public string PhoneNumber { get; set; }
     }
 }
