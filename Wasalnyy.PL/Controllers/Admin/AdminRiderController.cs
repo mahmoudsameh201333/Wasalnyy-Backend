@@ -42,5 +42,27 @@ namespace Wasalnyy.PL.Controllers.Admin
             var trips = await _adminService.GetRiderTripsAsync(riderId);
             return Ok(trips);
         }
+        [HttpGet("phone/{phone}/trips")]
+        public async Task<IActionResult> GetRiderTripsByPhone(string phone)
+        {
+            var trips = await _adminService.GetRiderTripsAsyncByphone(phone);
+            return Ok(trips);
+        }
+
+        [HttpGet("phone/{phone}/complaints")]
+        public async Task<IActionResult> GetRiderComplaintsByPhone(string phone)
+        {
+            var complaints = await _adminService.GetRiderComplainsByPhoneAsync(phone);
+            return Ok(complaints);
+        }
+
+        [HttpPut("{id}/suspend")]
+        public async Task<IActionResult> SuspendRider(string id)
+        {
+            await _adminService.SuspendAccountRider(id);
+            return Ok($"Rider {id} suspended");
+        }
+
+       
     }
 }

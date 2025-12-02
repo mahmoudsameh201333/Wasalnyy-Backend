@@ -19,6 +19,8 @@ namespace Wasalnyy.DAL.Repo.Abstraction
         Task<UserComplaintStatistics> GetUserComplaintStatisticsAsync(string userId);
         Task<bool> HasComplainedAboutTripAsync(Guid tripId, string userId);
         Task UpdateComplaintStatusAsync(Guid complaintId, ComplaintStatus status);
+        Task<IEnumerable<Complaint>> DriverAgainstComplains(string licen);
+        Task<IEnumerable<Complaint>> DriverComplains(string licen);
         Task<int> SaveChangesAsync();
     }
 }

@@ -6,52 +6,65 @@ namespace Wasalnyy.BLL.Service.Abstraction
 {
     public interface IAdminService
     {
-        // =======================
+        
         // Riders
-        // =======================
+        
         Task<IEnumerable<Rider>> GetAllRidersAsync();
+        Task<double> GetRidersCount();
         Task<Rider?> GetRiderByPhoneAsync(string phone);
-        Task<bool> DeleteRiderAsync(string riderId);
+      
         Task<int> GetRiderTripCountAsync(string riderId);
 
-        // NEW:
+        
         Task<IEnumerable<Trip>> GetRiderTripsAsync(string riderId);
+        Task<IEnumerable<Trip>> GetRiderTripsAsyncByphone(string phonenum);
+        Task<IEnumerable<Complaint>> GetRiderComplainsByPhoneAsync(string phonenum);
+        Task<Complaint> GetRiderComplainByComplainsIdAsync(Guid id);
+        
 
 
-        // =======================
         // Drivers
-        // =======================
+
         Task<IEnumerable<Driver>> GetAllDriversAsync();
         Task<Driver?> GetDriverByLicenseAsync(string license);
-        Task<bool> UpdateDriverAsync(string id, UpdateDriver dto);
+       
         Task<int> GetDriverTripCountAsync(string driverId);
         
 
-        // NEW:
+   
         Task<IEnumerable<Trip>> GetDriverTripsAsync(string driverId);
+        Task<IEnumerable<Trip>> GetDriverTripsAsyncByLicen(string license);
+        Task<IEnumerable<Complaint>> GetDriverSubmitedComplainsBylicenAsync(string licen);
+        Task<IEnumerable<Complaint>> GetDriverAgainstComplainsBylicenAsync(string licen);
+        Task<Complaint> GetDriverComplainByComplainsIdAsync(Guid id);
+        Task<double> GetDriverAvgRatingAsync(string licen);
 
 
-        // =======================
-        // Trips
-        // =======================
+
+
         
+        // Trips
+        
+
         Task<Trip?> GetTripByIdAsync(Guid id);
 
         Task<IEnumerable<Trip>> GetTripsByStatusAsync(TripStatus status);
+
+        
         
 
        
 
 
-        // =======================
+       
         // Dashboard / Reports
-        // =======================
+       
         Task<int> GetTotalTripsAsync();
         Task<int> GetTotalDriversAsync();
-        Task<int> GetTotalRidersAsync();
+       
 
         
-        Task<decimal> GetRevenueAsync(DateTime from, DateTime to);
+       
 
         Task SuspendAccountDriver(string lic);
         Task SuspendAccountRider(string id);

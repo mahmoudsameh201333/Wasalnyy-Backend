@@ -18,15 +18,30 @@ namespace Wasalnyy.PL.Controllers.Admin
         public async Task<IActionResult> GetTotalCounts()
         {
             var drivers = await _adminService.GetTotalDriversAsync();
-            var riders = await _adminService.GetTotalRidersAsync();
+            
             var trips = await _adminService.GetTotalTripsAsync();
 
             return Ok(new
             {
                 totalDrivers = drivers,
-                totalRiders = riders,
+                
                 totalTrips = trips
             });
+        }
+
+        [HttpGet("riders/count")]
+        public async Task<IActionResult> GetRidersCount()
+        {
+            var count = await _adminService.GetRidersCount();
+            return Ok(new { totalRiders = count });
+        }
+
+        [HttpGet("complaints/{id}")]
+        public async Task<IActionResult> GetDriverComplaintById(Guid id)
+        {
+            var complaint = await _adminService.GetDriverComplainByComplainsIdAsync(id);
+            if (complaint == null) return NotFound();
+            return Ok(complaint);
         }
     }
 }

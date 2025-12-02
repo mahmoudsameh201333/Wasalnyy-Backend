@@ -28,18 +28,16 @@ namespace Wasalnyy.BLL.Service.Implementation
             _valid = valid ?? throw new ArgumentNullException(nameof(valid));
         }
 
-        /// <summary>
-        /// Add a new review for a trip. User must be a participant in the trip.
-        /// </summary>
+        
         public async Task<ReturnReviewDto> AddReviewAsync(CreateReviewDto dto, string currentUserId)
         {
-            // ... existing validation ...
+           
 
             var tripDto = await _trip.GetByIdAsync(dto.TripId);
             if (tripDto == null)
                 throw new NotFoundException("Trip not found");
 
-            // ✅ AUTO-DETECT ReviewerType
+           
             ReviewerType reviewerType;
             if (tripDto.DriverId == currentUserId)
             {
@@ -54,15 +52,15 @@ namespace Wasalnyy.BLL.Service.Implementation
                 throw new UnauthorizedAccessException("You are not part of this trip");
             }
 
-            // Check trip is completed
+            
             if (tripDto.TripStatus != "Ended")
                 throw new ValidationException("You cannot review a trip that is not completed.");
 
-            // Check for duplicate review
+           
             var hasReviewed = await _reviewRepo.HasReviewedTripAsync(
                 dto.TripId,
                 currentUserId,
-                reviewerType);  // Use auto-detected type
+                reviewerType);  
 
             if (hasReviewed)
                 throw new ValidationException("You have already reviewed this trip");
@@ -75,7 +73,7 @@ namespace Wasalnyy.BLL.Service.Implementation
                 RiderId = tripDto.RiderId,
                 Comment = dto.Comment?.Trim(),
                 Stars = dto.Stars,
-                ReviewerType = reviewerType,  //  Use auto-detected type
+                ReviewerType = reviewerType,  
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -86,7 +84,7 @@ namespace Wasalnyy.BLL.Service.Implementation
         }
 
         
-        // Update an existing review. Only the review author can update it.
+      
        
         public async Task<ReturnReviewDto> UpdateReviewAsync(UpdateReviewDto dto, string currentUserId)
         {
@@ -103,7 +101,7 @@ namespace Wasalnyy.BLL.Service.Implementation
             if (review == null)
                 throw new NotFoundException("Review not found");
 
-            // Verify user is the author of this review
+            
             if (!IsReviewAuthor(review, currentUserId))
                 throw new UnauthorizedAccessException("You can only update your own reviews");
 
@@ -118,7 +116,7 @@ namespace Wasalnyy.BLL.Service.Implementation
         }
 
         
-        /// Delete a review. Only the review author can delete it.
+        
         
         public async Task<bool> DeleteReviewAsync(Guid reviewId, string currentUserId)
         {
@@ -143,7 +141,6 @@ namespace Wasalnyy.BLL.Service.Implementation
         }
 
        
-        /// Get all reviews for a specific driver
       
         public async Task<IEnumerable<ReturnReviewDto>> GetDriverReviewsAsync(string driverId)
         {
@@ -166,7 +163,7 @@ namespace Wasalnyy.BLL.Service.Implementation
         }
 
         
-        // Get all reviews for a specific rider
+        
         
         public async Task<IEnumerable<ReturnReviewDto>> GetRiderReviewsAsync(string riderId)
         {
@@ -178,7 +175,7 @@ namespace Wasalnyy.BLL.Service.Implementation
         }
 
         
-       // Get average rating for a rider (last 500 reviews)
+       
        
         public async Task<double> GetRiderAverageRatingAsync(string riderId)
         {
@@ -189,7 +186,7 @@ namespace Wasalnyy.BLL.Service.Implementation
         }
 
         
-        // Get a review by ID
+       
         
         public async Task<ReturnReviewDto> GetReviewByIdAsync(Guid reviewId)
         {
@@ -204,7 +201,7 @@ namespace Wasalnyy.BLL.Service.Implementation
         }
 
         
-        // Get reviews written by a specific user (for seeing their own reviews)
+        
         
         public async Task<IEnumerable<ReturnReviewDto>> GetMyReviewsAsync(string currentUserId, ReviewerType reviewerType)
         {
@@ -216,7 +213,7 @@ namespace Wasalnyy.BLL.Service.Implementation
         }
 
         
-        // Get comprehensive review statistics for a user
+        
         
         public async Task<ReviewStatisticsDto> GetReviewStatisticsAsync(string userId, ReviewerType userType)
         {
@@ -228,7 +225,7 @@ namespace Wasalnyy.BLL.Service.Implementation
         }
 
         
-        // Get a single review (private method to check authorization)
+      
         
         public async Task<ReturnReviewDto> GetReviewForViewAsync(Guid reviewId, string currentUserId)
         {
@@ -252,8 +249,7 @@ namespace Wasalnyy.BLL.Service.Implementation
      
 
         
-        // Check if the current user is the author of the review
-       // validate method 
+      
         private bool IsReviewAuthor(Review review, string currentUserId)
         {
             return (review.ReviewerType == ReviewerType.Rider && review.RiderId == currentUserId) ||

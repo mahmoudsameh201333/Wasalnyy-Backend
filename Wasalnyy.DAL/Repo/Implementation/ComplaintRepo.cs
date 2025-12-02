@@ -186,7 +186,7 @@ namespace Wasalnyy.DAL.Repo.Implementation
         public async Task UpdateComplaintStatusAsync(Guid complaintId, ComplaintStatus status)
         {
             if (complaintId == Guid.Empty)
-                throw new ArgumentNullException(nameof(complaintId), "Complaint ID cannot be empty");
+                throw new ArgumentNullException( "Complaint ID cannot be empty");
 
             var complaint = await _db.Complaints.FindAsync(complaintId);
             if (complaint == null)
@@ -197,8 +197,34 @@ namespace Wasalnyy.DAL.Repo.Implementation
 
             _db.Complaints.Update(complaint);
         }
+        public async Task<IEnumerable<Complaint>>DriverComplains(string licen)
+        {
+            var driver = await _db.Drivers.FirstOrDefaultAsync(d => d.License == licen);
+            if (driver == null)
+            {
+                throw new ArgumentNullException("Drivr can't be found");
+            }
+            var complains = await _db.Complaints.Where(d => d.SubmittedById == driver.Id).AsNoTracking().ToListAsync();
+            return complains;
+        }
 
-      
+        public async Task<IEnumerable<Complaint>> DriverAgainstComplains(string licen)
+        {
+            var driver = await _db.Drivers.FirstOrDefaultAsync(d => d.License == licen);
+            if (driver == null)
+            {
+                throw new ArgumentNullException("Drivr can't be found");
+            }
+            var complains = await _db.Complaints.Where(d => d.AgainstUserId == driver.Id).AsNoTracking().ToListAsync();
+            if (complains == null)
+            {
+                throw new ArgumentNullException("there no Complaints found ");
+            }
+            return complains;
+        }
+
+
+
         public async Task<int> SaveChangesAsync()
         {
             return await _db.SaveChangesAsync();

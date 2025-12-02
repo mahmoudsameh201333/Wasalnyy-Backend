@@ -25,7 +25,7 @@ namespace Wasalnyy.BLL.Service.Implementation
 			IConfiguration config,
 			IFaceService faceService,
 			IUserFaceDataRepo faceRepo,
-			IWalletRepo walletRepo,IWalletService walletService)
+			IWalletRepo walletRepo, IWalletService walletService)
 		{
 			_userManager = userManager;
 			_jwtHandler = jwtHandler;
@@ -33,10 +33,10 @@ namespace Wasalnyy.BLL.Service.Implementation
 			_emailService = emailService;
 			BaseUrl = config["BaseUrl"]!;
 			_faceRepo = faceRepo;
-            _walletRepo = walletRepo;
-            _faceService = faceService;
+			_walletRepo = walletRepo;
+			_faceService = faceService;
 			this._walletService = walletService;
-        }
+		}
 		public async Task<AuthResult> RegisterDriverAsync(RegisterDriverDto dto)
 		{
 			var existingUser = await _userManager.FindByEmailAsync(dto.Email);
@@ -99,19 +99,19 @@ namespace Wasalnyy.BLL.Service.Implementation
 			await _userManager.AddToRoleAsync(driver, "Driver");
 			var jwt_token = await _jwtHandler.GenerateToken(driver);
 
-           var resp= await _walletService.CreateWalletAsync(new DTO.Wallet.CreateWalletDTO
-            {
-                Balance = 0,
+			var resp = await _walletService.CreateWalletAsync(new DTO.Wallet.CreateWalletDTO
+			{
+				Balance = 0,
 				UserId = driver.Id,
 
-                CreatedAt=DateTime.Now
+				CreatedAt = DateTime.Now
 
-            });
+			});
 			if (!resp.IsSuccess)
 			{
 				return new AuthResult { Success = false, Message = "Driver registered but wallet creation failed: " + resp.Message };
-            }	
-            return new AuthResult { Success = true, Message = "Driver registered successfully", Token = jwt_token, DriverId = driver.Id };
+			}
+			return new AuthResult { Success = true, Message = "Driver registered successfully", Token = jwt_token, DriverId = driver.Id };
 		}
 		public async Task<AuthResult> RegisterRiderAsync(RegisterRiderDto dto)
 		{
@@ -157,20 +157,20 @@ namespace Wasalnyy.BLL.Service.Implementation
 			await _userManager.AddToRoleAsync(rider, "Rider");
 			var jwt_token = await _jwtHandler.GenerateToken(rider);
 
-            var resp = await _walletService.CreateWalletAsync(new DTO.Wallet.CreateWalletDTO
-            {
-                Balance = 0,
-                UserId = rider.Id,
+			var resp = await _walletService.CreateWalletAsync(new DTO.Wallet.CreateWalletDTO
+			{
+				Balance = 0,
+				UserId = rider.Id,
 
-                CreatedAt = DateTime.Now
+				CreatedAt = DateTime.Now
 
-            });
-            if (!resp.IsSuccess)
-            {
-                return new AuthResult { Success = false, Message = "Rider registered but wallet creation failed: " + resp.Message };
-            }
+			});
+			if (!resp.IsSuccess)
+			{
+				return new AuthResult { Success = false, Message = "Rider registered but wallet creation failed: " + resp.Message };
+			}
 
-            return new AuthResult { Success = true, Message = "Rider registered successfully", Token = jwt_token };
+			return new AuthResult { Success = true, Message = "Rider registered successfully", Token = jwt_token };
 		}
 		public async Task<AuthResult> LoginAsync(LoginDto dto, string? role = null)
 		{
@@ -258,25 +258,72 @@ namespace Wasalnyy.BLL.Service.Implementation
 			}
 			return new AuthResult { Success = false, Message = "Face not recognized" };
 		}
-        public async Task CreateWalletForUserAsync(User user)
-        {
-            // prevent admin from getting wallet
-            if (await _userManager.IsInRoleAsync(user, "Admin"))
-                return;
+		public async Task CreateWalletForUserAsync(User user)
+		{
+			// prevent admin from getting wallet
+			if (await _userManager.IsInRoleAsync(user, "Admin"))
+				return;
 
-            // Check if wallet already exists
-            var existingWallet = await _walletRepo.GetWalletOfUserIdAsync(user.Id);
-            if (existingWallet != null)
-                return;
+			// Check if wallet already exists
+			var existingWallet = await _walletRepo.GetWalletOfUserIdAsync(user.Id);
+			if (existingWallet != null)
+				return;
 
-            var wallet = new Wallet
-            {
-                UserId = user.Id,
-                Balance = 0,
-            };
+			var wallet = new Wallet
+			{
+				UserId = user.Id,
+				Balance = 0,
+			};
 
-            await _walletRepo.CreateAsync(wallet);
-            await _walletRepo.SaveChangesAsync();
-        }
-    }
+			await _walletRepo.CreateAsync(wallet);
+			await _walletRepo.SaveChangesAsync();
+		}
+    
+
+	public async Task<AuthResult> UpdateEmailAsync(string userId, string newEmail)
+		{
+			var user = await _userManager.FindByIdAsync(userId);
+			if (user == null)
+				return new AuthResult { Success = false, Message = "User not found" };
+
+			// Check if the new email already exists
+			var existingUser = await _userManager.FindByEmailAsync(newEmail);
+			if (existingUser != null && existingUser.Id != userId)
+			{
+				return new AuthResult { Success = false, Message = "Email is already taken" };
+			}
+
+			// Update the email (unconfirmed)
+			user.Email = newEmail;
+			user.UserName = newEmail;
+			user.NormalizedEmail = newEmail.ToUpper();
+			user.EmailConfirmed = false;
+
+			await _userManager.UpdateAsync(user);
+
+			// Generate new confirmation token
+			var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+
+			var encodedToken = WebEncoders.Base64UrlEncode(
+				Encoding.UTF8.GetBytes(token)
+			);
+
+			// Confirmation link
+			string confirmUrl =
+				$"{BaseUrl}/api/Email/confirm-email?userId={user.Id}&token={encodedToken}";
+
+			// Send confirmation email
+			await _emailService.SendEmail(
+				newEmail,
+				"Confirm your new email",
+				$"Click to confirm your new email: <a href='{confirmUrl}'>Confirm Email</a>"
+			);
+
+			return new AuthResult
+			{
+				Success = true,
+				Message = "Email updated! Please confirm the new email to activate it."
+			};
+		}
+	}
 }
