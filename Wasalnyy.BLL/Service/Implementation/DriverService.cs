@@ -30,10 +30,19 @@
         {
             await _validator.ValidateGetById(id);
             var driver = await _driverRepo.GetByIdAsync(id);
-            if(driver == null)
+
+            Console.WriteLine($" Service: Driver found: {driver != null}");  
+
+            if (driver == null)
                 throw new NotFoundException($"Driver with ID '{id}' was not found.");
 
-            return _mapper.Map<Driver, ReturnDriverDto>(driver);
+            Console.WriteLine($" Service: Driver name: {driver.FullName}");  
+
+            var result = _mapper.Map<Driver, ReturnDriverDto>(driver);
+
+            Console.WriteLine($" Service: Mapped successfully");  
+
+            return result;
         }
 
         public async Task UpdateLocationAsync(string driverId, Coordinates coordinates)

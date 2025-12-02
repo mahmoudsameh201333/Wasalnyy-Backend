@@ -23,17 +23,13 @@ namespace Wasalnyy.PL.Controllers
             _complaintService = complaintService;
         }
 
-        // Helper method to get current user ID from token
+        /
         private string GetCurrentUserId()
         {
             return User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         }
 
-        // ============= CREATE COMPLAINT =============
-
-        /// <summary>
-        /// Submit a complaint about a driver or rider
-        /// </summary>
+ 
         [HttpPost("add")]
         [Authorize]
         public async Task<IActionResult> SubmitComplaint([FromBody] CreateComplaintDto dto)
@@ -64,11 +60,7 @@ namespace Wasalnyy.PL.Controllers
             }
         }
 
-        // ============= GET COMPLAINTS =============
 
-        /// <summary>
-        /// Get all complaints against a user (driver or rider)
-        /// </summary>
         [HttpGet("against/{userId}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetComplaintsAgainstUser(string userId)
@@ -87,9 +79,6 @@ namespace Wasalnyy.PL.Controllers
             }
         }
 
-        /// <summary>
-        /// Get all critical complaints against a user
-        /// </summary>
         [HttpGet("against/{userId}/critical")]
         [AllowAnonymous]
         public async Task<IActionResult> GetCriticalComplaints(string userId)
@@ -108,9 +97,7 @@ namespace Wasalnyy.PL.Controllers
             }
         }
 
-        /// <summary>
-        /// Get all non-critical complaints against a user
-        /// </summary>
+       
         [HttpGet("against/{userId}/non-critical")]
         [AllowAnonymous]
         public async Task<IActionResult> GetNonCriticalComplaints(string userId)
@@ -129,9 +116,7 @@ namespace Wasalnyy.PL.Controllers
             }
         }
 
-        /// <summary>
-        /// Get all complaints submitted by current user
-        /// </summary>
+     
         [HttpGet("my-complaints")]
         [Authorize]
         public async Task<IActionResult> GetMyComplaints()
@@ -151,9 +136,7 @@ namespace Wasalnyy.PL.Controllers
             }
         }
 
-        /// <summary>
-        /// Get a specific complaint by ID
-        /// </summary>
+       
         [HttpGet("{complaintId:guid}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetComplaintById(Guid complaintId)
@@ -172,11 +155,7 @@ namespace Wasalnyy.PL.Controllers
             }
         }
 
-        // ============= COMPLAINT STATISTICS & BAN STATUS =============
-
-        /// <summary>
-        /// Get complaint statistics and ban status for a user
-        /// </summary>
+   
         [HttpGet("statistics/{userId}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetComplaintStatistics(string userId)
@@ -195,9 +174,7 @@ namespace Wasalnyy.PL.Controllers
             }
         }
 
-        /// <summary>
-        /// Check if a user should be banned (admin use)
-        /// </summary>
+       
         [HttpGet("check-ban/{userId}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CheckBanStatus(string userId)
@@ -226,11 +203,7 @@ namespace Wasalnyy.PL.Controllers
             }
         }
 
-        // ============= CHANGE COMPLAINT STATUS (ADMIN ONLY) =============
-
-        /// <summary>
-        /// Change complaint status (Admin only)
-        /// </summary>
+    
         [HttpPut("{complaintId:guid}/status")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateComplaintStatus(Guid complaintId, [FromBody] UpdateComplaintStatusDto dto)
@@ -253,11 +226,5 @@ namespace Wasalnyy.PL.Controllers
         }
     }
 
-    /// <summary>
-    /// DTO to update complaint status
-    /// </summary>
-    public class UpdateComplaintStatusDto
-    {
-        public ComplaintStatus Status { get; set; }
-    }
+  
 }

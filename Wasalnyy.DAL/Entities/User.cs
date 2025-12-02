@@ -17,6 +17,7 @@
 		public DateTime CreatedAt { get; set; }
 		public bool IsDeleted { get; protected set; } = false;
         public bool IsSuspended { get; protected set; } = false;
+       
 
 
         public User()

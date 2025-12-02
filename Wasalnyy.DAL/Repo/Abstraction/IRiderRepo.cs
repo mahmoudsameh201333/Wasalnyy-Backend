@@ -12,8 +12,10 @@ namespace Wasalnyy.DAL.Repo.Abstraction
         Task<IEnumerable<Rider>> GetAllRidersAsync();
 
         Task<Rider?> GetByPhoneAsync(string phonenum);
-         Task<int> GetCountAsync();
+         Task<double> GetCountAsync();
         Task UpdateRiderAsync(Rider rider);
+        Task<IEnumerable<Trip>> GetRiderTripsByPhone(string phone);
+        public Task<IEnumerable<Complaint>> GetRiderComplainsByPhone(string phone);
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 
     }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Wasalnyy.DAL.Repo.Abstraction;
+using Wasalnyy.DAL.Repo.Implementation;
 
 namespace Wasalnyy.BLL.Service.Implementation
 {
@@ -10,17 +11,21 @@ namespace Wasalnyy.BLL.Service.Implementation
         private readonly IDriverRepo _driverRepo;
         private readonly IRiderRepo _riderRepo;
         private readonly ITripRepo _tripRepo;
+        private readonly IComplaintRepo _complaintRepo;
+        private readonly IReviewRepo _reviewRepo;
 
-        public AdminService(IDriverRepo driverRepo, IRiderRepo riderRepo, ITripRepo tripRepo)
+        public AdminService(IDriverRepo driverRepo, IRiderRepo riderRepo, ITripRepo tripRepo, IComplaintRepo complaintRepo, IReviewRepo reviewRepo)
         {
             _driverRepo = driverRepo;
             _riderRepo = riderRepo;
             _tripRepo = tripRepo;
+            _complaintRepo = complaintRepo;
+            _reviewRepo = reviewRepo;
         }
 
-        // ============================================================
-        // 🟦 R I D E R   M A N A G E M E N T
-        // ============================================================
+        
+        // rider
+        
 
         public async Task<IEnumerable<Rider>> GetAllRidersAsync()
         {
@@ -32,15 +37,9 @@ namespace Wasalnyy.BLL.Service.Implementation
             return await _riderRepo.GetByPhoneAsync(phone);
         }
 
-        public Task<bool> UpdateRiderAsync(string id, UpdateRider rider)
-        {
-            throw new NotImplementedException();
-        }
+        
 
-        public Task<bool> DeleteRiderAsync(string riderId)
-        {
-            throw new NotImplementedException();
-        }
+        
 
         public async Task<int> GetRiderTripCountAsync(string riderId)
         {
@@ -59,9 +58,9 @@ namespace Wasalnyy.BLL.Service.Implementation
         }
 
 
-        // ============================================================
-        // 🟧 D R I V E R   M A N A G E M E N T
-        // ============================================================
+        
+        //driver
+        
 
         public async Task<IEnumerable<Driver>> GetAllDriversAsync()
         {
@@ -73,15 +72,9 @@ namespace Wasalnyy.BLL.Service.Implementation
             return await _driverRepo.GetDriverByLicense(licen);
         }
 
-        public Task<bool> UpdateDriverAsync(string id, UpdateDriver driver)
-        {
-            throw new NotImplementedException();
-        }
+      
 
-        public Task<bool> DeleteUserAsync(string userId)
-        {
-            throw new NotImplementedException();
-        }
+       
 
         public async Task<int> GetDriverTripCountAsync(string driverId)
         {
@@ -100,9 +93,9 @@ namespace Wasalnyy.BLL.Service.Implementation
         }
 
 
-        // ============================================================
-        // T R I P   M A N A G E M E N T
-        // ============================================================
+        
+        // trip
+     
 
         public async Task<Trip?> GetTripByIdAsync(Guid id)
         {
@@ -119,20 +112,15 @@ namespace Wasalnyy.BLL.Service.Implementation
        
 
        
-
-        // ============================================================
-        // 🟪 R E P O R T S /  S T A T I S T I C S
-        // ============================================================
+        // Reports/stats
+        
 
         public async Task<int> GetTotalDriversAsync()
         {
             return await _driverRepo.GetCountAsync();
         }
 
-        public async Task<int> GetTotalRidersAsync()
-        {
-            return await _riderRepo.GetCountAsync();
-        }
+        
 
         public async Task<int> GetTotalTripsAsync()
         {
@@ -141,10 +129,7 @@ namespace Wasalnyy.BLL.Service.Implementation
 
         
 
-        public Task<decimal> GetRevenueAsync(DateTime from, DateTime to)
-        {
-            throw new NotImplementedException();
-        }
+       
 
         public async Task SuspendAccountDriver(string lic)
         {
@@ -165,5 +150,61 @@ namespace Wasalnyy.BLL.Service.Implementation
                 await _riderRepo.SaveChangesAsync();
             }
         }
+
+        public Task<double> GetRidersCount()
+        {
+            var count = _riderRepo.GetCountAsync();
+
+            return count;
+        }
+
+        public async Task<IEnumerable<Trip>> GetRiderTripsAsyncByphone(string phonenum)
+        {
+            return await _riderRepo.GetRiderTripsByPhone(phonenum);
+        }
+
+        public async Task<IEnumerable<Complaint>> GetRiderComplainsByPhoneAsync(string phonenum)
+        {
+            return await _riderRepo.GetRiderComplainsByPhone(phonenum);
+        }
+
+     
+
+        public Task<IEnumerable<Trip>> GetDriverTripsAsyncByLicen(string license)
+        {
+            //var driver=_driverRepo.GetDriverByLicense(license);
+            //var trips = _tripRepo.GetAllDriverTripsPaginatedAsync(driver.Id);
+            throw new NotImplementedException();
+        }
+
+        public async Task<IEnumerable<Complaint>> GetDriverSubmitedComplainsBylicenAsync(string licen)
+        {
+            return await _complaintRepo.DriverComplains(licen);
+        }
+
+        public async Task<IEnumerable<Complaint>> GetDriverAgainstComplainsBylicenAsync(string licen)
+        {
+            return await _complaintRepo.DriverAgainstComplains(licen);
+        }
+
+        public async Task<double> GetDriverAvgRatingAsync(string licen)
+        {
+            var driver=await _driverRepo.GetDriverByLicense(licen);
+            var rating = await _reviewRepo.GetDriverAverageRatingAsync(driver.Id);
+
+            return rating;
+        }
+
+        public async Task<Complaint> GetRiderComplainByComplainsIdAsync(Guid id)
+        {
+            return await _complaintRepo.GetByIdAsync(id);
+        }
+
+        public async Task<Complaint> GetDriverComplainByComplainsIdAsync(Guid id)
+        {
+            return await _complaintRepo.GetByIdAsync(id);
+        }
+
+       
     }
 }

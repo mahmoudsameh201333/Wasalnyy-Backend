@@ -7,5 +7,7 @@
 		Task<AuthResult> RegisterRiderAsync(RegisterRiderDto dto);
 		Task<AuthResult> RegisterDriverFaceAsync(string driverId, byte[] faceImage);
 		Task<AuthResult> FaceLoginAsync(byte[] faceImage);
-	}
+		Task<AuthResult> UpdateEmailAsync(string userId, string newEmail);
+
+    }
 }

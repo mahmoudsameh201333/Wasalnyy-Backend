@@ -14,7 +14,7 @@
             _tripService = tripService;
         }
 
-        
+
 
         [HttpPost("SetAsAvailable")]
         public async Task<IActionResult> SetAsAvailableAsync([FromBody] Coordinates coordinate)

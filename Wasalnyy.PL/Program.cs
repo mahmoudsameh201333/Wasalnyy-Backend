@@ -16,46 +16,45 @@ using Wasalnyy.PL.Middleware;
 
 namespace Wasalnyy.PL
 {
-	public class Program
-	{
-		public static async Task Main(string[] args)
-		{
-			var builder = WebApplication.CreateBuilder(args);
+    public class Program
+    {
+        public static async Task Main(string[] args)
+        {
+            var builder = WebApplication.CreateBuilder(args);
 
-			//builder.Services.AddCors(options =>
-			//{
-			//	options.AddPolicy("AllowAll", policy =>
-			//	{
-			//		policy.AllowAnyOrigin()
-			//			  .AllowAnyMethod()
-			//			  .AllowAnyHeader();
-			//	});
-			//});
+            //builder.Services.AddCors(options =>
+            //{
+            //    options.AddPolicy("AllowAll", policy =>
+            //    {
+            //        policy.AllowAnyOrigin()
+            //              .AllowAnyMethod()
+            //              .AllowAnyHeader();
+            //    });
+            //});
 
-			// Add services to the container.
-			builder.Services.AddControllers();
+            // Add services to the container.
+            builder.Services.AddControllers();
 
-			builder.Services.AddSignalR(options =>
-			{
-				options.AddFilter<SignalRExceptionFilter>();
-			});
+            builder.Services.AddSignalR(options =>
+            {
+                options.AddFilter<SignalRExceptionFilter>();
+            });
 
-			builder.Services.AddDbContext<WasalnyyDbContext>(options =>
-			  options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+            builder.Services.AddDbContext<WasalnyyDbContext>(options =>
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+            builder.Services.Configure<PricingSettings>(builder.Configuration.GetSection("PricingSettings"));
+            builder.Services.AddScoped<PricingSettings>(sp =>
+                sp.GetRequiredService<IOptions<PricingSettings>>().Value);
 
-			builder.Services.Configure<PricingSettings>(builder.Configuration.GetSection("PricingSettings"));
-			builder.Services.AddScoped<PricingSettings>(sp =>
-				sp.GetRequiredService<IOptions<PricingSettings>>().Value);
+            builder.Services.AddIdentity<User, IdentityRole>(options =>
+                options.SignIn.RequireConfirmedAccount = true)
+                .AddEntityFrameworkStores<WasalnyyDbContext>()
+                .AddTokenProvider<DataProtectorTokenProvider<User>>(TokenOptions.DefaultProvider);
 
-
-			builder.Services.AddIdentity<User, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = true)
-						   .AddEntityFrameworkStores<WasalnyyDbContext>()
-						   .AddTokenProvider<DataProtectorTokenProvider<User>>(TokenOptions.DefaultProvider);
-
-			// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-			builder.Services.AddEndpointsApiExplorer();
-			builder.Services.AddSwaggerGen();
+            // Swagger
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen();
 
 			builder.Services.AddCors(options =>
 			{
@@ -79,40 +78,46 @@ namespace Wasalnyy.PL
 			builder.Services.AddSingleton<IWasalnyyHubNotifier, WasalnyyHubNotifier>();
             builder.Services.AddSingleton<IChatHubEventHandler, ChatHubEventHandler>();
 
-
             builder.Services.AddScoped<WasalnyyOnlineActionFilter>();
 
-			builder.Services.AddHttpClient();
+            builder.Services.AddHttpClient();
 
-			var app = builder.Build();
+            var app = builder.Build();
 
-			app.UseBussinessEventSubscriptions();
+            app.UseBussinessEventSubscriptions();
 
-			using (var scope = app.Services.CreateScope())
-			{
-				var services = scope.ServiceProvider;
-				var userManager = services.GetRequiredService<UserManager<User>>();
-				var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+            using (var scope = app.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                var userManager = services.GetRequiredService<UserManager<User>>();
+                var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
-				await DbSeeder.SeedAsync(userManager, roleManager);
+                await DbSeeder.SeedAsync(userManager, roleManager);
 
-				var connectionService = services.GetRequiredService<IWasalnyyHubService>();
-				await connectionService.DeleteAllConnectionsAsync();
-			}
-			// Configure the HTTP request pipeline.
-			if (app.Environment.IsDevelopment())
-			{
-				app.UseSwagger();
-				app.UseSwaggerUI();
-			}
-			app.UseHttpsRedirection();
+                var connectionService = services.GetRequiredService<IWasalnyyHubService>();
+                await connectionService.DeleteAllConnectionsAsync();
+            }
+
+            // Configure the HTTP request pipeline.
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseSwagger();
+                app.UseSwaggerUI();
+            }
+
+            app.UseHttpsRedirection();
             app.UseRouting();
+
             app.UseCors("CorsPolicy");
-			app.UseAuthentication();
-			app.UseAuthorization();
-			app.UseStaticFiles();
-			app.UseMiddleware<ExptionhandlingMiddleware>();
+
+            app.UseAuthentication();
+            app.UseAuthorization();
+
+            app.UseStaticFiles();
+            app.UseMiddleware<ExptionhandlingMiddleware>();
+
             app.UseWebSockets();
+
             app.MapHub<WasalnyyHub>("/Wasalnyy");
             app.MapHub<ChatHub>("/Chat");
 
@@ -120,4 +125,7 @@ namespace Wasalnyy.PL
 			app.Run();
 		}
 	}
+
+        }
+    }
 }

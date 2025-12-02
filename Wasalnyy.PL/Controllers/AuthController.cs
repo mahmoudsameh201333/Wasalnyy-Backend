@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.Security.Claims;
 using System.Text;
 
 namespace Wasalnyy.PL.Controllers
@@ -80,5 +81,20 @@ namespace Wasalnyy.PL.Controllers
 
 			return Ok(new { result.Message, result.Token });
 		}
-	}
+
+        [HttpPost("update-email")]
+        public async Task<IActionResult> UpdateEmail([FromBody] UpdateEmailDto dto)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+                return Unauthorized("Invalid token");
+            var result = await _authService.UpdateEmailAsync(userId, dto.NewEmail);
+
+            if (!result.Success)
+                return BadRequest(result.Message);
+
+            return Ok(result.Message);
+        }
+
+    }
 }

@@ -35,18 +35,18 @@ namespace Wasalnyy.PL.Controllers
         [Authorize(Roles = "Driver,Rider")]
         public async Task<ActionResult<ReturnReviewDto>> AddReview([FromBody] CreateReviewDto dto)
         {
-            // Check if data is valid
+          
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            // Get current user
+           
             var currentUserId = GetCurrentUserId();
             if (string.IsNullOrEmpty(currentUserId))
                 return Unauthorized("User not authenticated");
 
             try
             {
-                // Call service to add review
+                
                 var review = await _reviewService.AddReviewAsync(dto, currentUserId);
                 return Ok(new { Message = "Review added successfully", review });
             }
@@ -83,7 +83,7 @@ namespace Wasalnyy.PL.Controllers
             }
         }
 
-        // GET: api/reviews/driver/{driverId}/rating
+       
         [HttpGet("driver/{driverId}/rating")]
         [AllowAnonymous]
         public async Task<IActionResult> GetDriverRating(string driverId)
@@ -102,7 +102,6 @@ namespace Wasalnyy.PL.Controllers
             }
         }
 
-        // GET: api/reviews/driver/{driverId}/stats
         [HttpGet("driver/{driverId}/stats")]
         [AllowAnonymous]
         public async Task<IActionResult> GetDriverStats(string driverId)
@@ -124,7 +123,7 @@ namespace Wasalnyy.PL.Controllers
             }
         }
 
-        // GET: api/reviews/rider/{riderId}
+        
         [HttpGet("rider/{riderId}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetRiderReviews(string riderId)
@@ -143,7 +142,7 @@ namespace Wasalnyy.PL.Controllers
             }
         }
 
-        // GET: api/reviews/rider/{riderId}/rating
+       
         [HttpGet("rider/{riderId}/rating")]
         [AllowAnonymous]
         public async Task<IActionResult> GetRiderRating(string riderId)
@@ -162,7 +161,7 @@ namespace Wasalnyy.PL.Controllers
             }
         }
 
-        // GET: api/reviews/my-reviews?reviewerType=Rider
+        
         [HttpGet("my-reviews")]
         [Authorize]
         public async Task<IActionResult> GetMyReviews([FromQuery] ReviewerType reviewerType)
@@ -182,7 +181,7 @@ namespace Wasalnyy.PL.Controllers
             }
         }
 
-        // GET: api/reviews/{reviewId:guid}
+       
         [HttpGet("{reviewId:guid}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetReviewById(Guid reviewId)
@@ -201,9 +200,7 @@ namespace Wasalnyy.PL.Controllers
             }
         }
 
-        // ============= UPDATE REVIEW =============
-
-        // PUT: api/reviews/{reviewId:guid}
+        
         [HttpPut("{reviewId:guid}")]
         [Authorize]
         public async Task<IActionResult> UpdateReview(Guid reviewId, [FromBody] UpdateReviewDto dto)
@@ -237,9 +234,6 @@ namespace Wasalnyy.PL.Controllers
             }
         }
 
-        // ============= DELETE REVIEW =============
-
-        // DELETE: api/reviews/{reviewId:guid}
         [HttpDelete("{reviewId:guid}")]
         [Authorize]
         public async Task<IActionResult> DeleteReview(Guid reviewId)

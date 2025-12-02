@@ -32,6 +32,22 @@ namespace Wasalnyy.PL.Controllers.Admin
             return Ok(trips);
         }
 
-   
+        
+        // we can add  these both methods 
+        //[HttpGet("driver/{driverId}")]
+        //public async Task<IActionResult> GetTripsByDriver(string driverId)
+        //{
+        //    var trips = await _adminService.GetTripsByDriverAsync(driverId);
+        //    return Ok(trips);
+        //}
+
+        //[HttpGet("rider/{riderId}")]
+        //public async Task<IActionResult> GetTripsByRider(string riderId)
+        //{
+        //    var trips = await _adminService.GetTripsByRiderAsync(riderId);
+        //    return Ok(trips);
+        //}
+
+
     }
 }

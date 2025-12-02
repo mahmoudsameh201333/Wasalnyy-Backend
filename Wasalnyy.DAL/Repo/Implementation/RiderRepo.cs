@@ -35,11 +35,23 @@ namespace Wasalnyy.DAL.Repo.Implementation
             var RiderByPhone=_context.Riders.FirstOrDefaultAsync(e=>e.PhoneNumber == phonenum);
             return RiderByPhone;
         }
-        public async Task<int> GetCountAsync()
+        public async Task<double> GetCountAsync()
         {
             return await _context.Riders
                 .AsNoTracking()
                 .CountAsync(r=>r.IsDeleted==false);
+        }
+        public async Task<IEnumerable<Trip>>GetRiderTripsByPhone(string phone)
+        {
+            var rider= _context.Riders.FirstOrDefault(p=>p.PhoneNumber==phone);
+            
+            return await _context.Trips.Include(t => t.Rider).Where(t=>t.RiderId==rider.Id).AsNoTracking().ToListAsync();
+        }
+        public async Task<IEnumerable<Complaint>> GetRiderComplainsByPhone(string phone)
+        {
+            var rider= await _context.Riders.FirstOrDefaultAsync(p=>p.PhoneNumber==phone);
+            return await _context.Complaints.Include(t => t.SubmittedById == rider.Id).AsNoTracking().ToListAsync();
+
         }
 
         public async Task UpdateRiderAsync(Rider rider)
