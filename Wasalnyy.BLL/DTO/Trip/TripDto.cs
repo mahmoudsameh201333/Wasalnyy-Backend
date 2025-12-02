@@ -13,7 +13,7 @@
         public DateTime? ArrivalDate { get; set; }
         public Coordinates? CurrentCoordinates { get; set; }
         public Coordinates PickupCoordinates { get; set; }
-        public Coordinates DistinationCoordinates { get; set; }
+        public Coordinates DestinationCoordinates { get; set; }
         public string? DriverId { get; set; }
         public string RiderId { get; set; }
         public Guid ZoneId { get; set; }
