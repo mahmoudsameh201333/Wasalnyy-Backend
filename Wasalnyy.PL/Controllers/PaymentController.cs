@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Stripe.V2;
 using Wasalnyy.BLL.DTO.Payment;
+using Wasalnyy.BLL.DTO.Wallet;
 using Wasalnyy.BLL.Service.Implementation;
 using Wasalnyy.DAL.Enum;
 
@@ -30,28 +32,36 @@ namespace Wasalnyy.PL.Controllers
         [HttpPost("handle-rider-payment")]
         [Authorize(Roles = "Rider")]
 
-        public async Task<IActionResult> HandleRiderPayment([FromBody] RiderPaymentDetailsDTO paymentDetails)
+        public async Task<IActionResult> HandleRiderPayment([FromBody] HandlePaymentDTO handlePaymentDTO)
         {
-            if (paymentDetails == null)
+            var riderId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (riderId == null) return Unauthorized();
+
+            if (handlePaymentDTO == null)
                 return BadRequest("Payment result is required.");
 
-            if (paymentDetails.Amount <= 0)
+            if (handlePaymentDTO.Amount <= 0)
                 return BadRequest("Amount must be greater than 0.");
 
-            if (string.IsNullOrWhiteSpace(paymentDetails.RiderId))
-                return BadRequest("RiderId is required.");
-
-            if (string.IsNullOrWhiteSpace(paymentDetails.TransactionId))
+            if (string.IsNullOrWhiteSpace(handlePaymentDTO.TransactionId))
                 return BadRequest("TransactionId is required.");
-            if (paymentDetails.Status != PaymentStatus.Success &&
-                paymentDetails.Status != PaymentStatus.Fail)
+
+
+            if (handlePaymentDTO.Status != PaymentStatus.Success &&
+                handlePaymentDTO.Status != PaymentStatus.Fail)
             {
                 return BadRequest("Payment status must be either (1) for Success or (0) for Fail.");
             }
 
             // Call business layer
-            var result = await _paymentService.HandleRiderPayment(paymentDetails);
-
+            var result = await _paymentService.HandleRiderPayment(
+                new RiderPaymentDetailsDTO
+                {
+                    RiderId = riderId,
+                    TransactionId = handlePaymentDTO.TransactionId,
+                    Status = handlePaymentDTO.Status,
+                    Amount = handlePaymentDTO.Amount
+                });
             if (!result.IsSuccess) // <-- check the service response
                 return StatusCode(StatusCodes.Status500InternalServerError, result.Message);
 
