@@ -23,7 +23,7 @@ namespace Wasalnyy.PL.Controllers
             _complaintService = complaintService;
         }
 
-        /
+        
         private string GetCurrentUserId()
         {
             return User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
