@@ -1,24 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
-using Wasalnyy.BLL.DTO.Trip;
-using Wasalnyy.BLL.DTO.Trip;
-using Wasalnyy.DAL.Entities;
-
-namespace Wasalnyy.BLL.Validators
+﻿namespace Wasalnyy.BLL.Validators
 {
     public class TripServiceValidator
     {
-        public void ValidateGetById(Guid id)
+        public async Task ValidateGetById(Guid id)
         {
             if (id == Guid.Empty)
                 throw new ArgumentException($"id '{id}' is empty");
         }
-        public void ValidateCancelTripAsync(string UserId, Guid tripId)
+        public async Task ValidateCancelTripAsync(string UserId, Guid tripId)
 		{
 			if (string.IsNullOrWhiteSpace(UserId))
 				throw new ArgumentException(UserId);
@@ -27,7 +16,7 @@ namespace Wasalnyy.BLL.Validators
 				throw new ArgumentException($"tripId '{tripId}' is empty");
 		}
 
-        public void ValidateConfirmTrip(string riderId, Guid tripId)
+        public async Task ValidateConfirmTrip(string riderId, Guid tripId)
         {
             if (string.IsNullOrWhiteSpace(riderId))
                 throw new ArgumentException(riderId);
@@ -35,27 +24,27 @@ namespace Wasalnyy.BLL.Validators
             if (tripId == Guid.Empty)
                 throw new ArgumentException($"tripId '{tripId}' is empty");
         }
-        public void ValidateGetByRequestedTripsByZone(Guid zoneId)
+        public async Task ValidateGetByRequestedTripsByZone(Guid zoneId)
         {
             if (zoneId == Guid.Empty)
                 throw new ArgumentException($"zoneId '{zoneId}' is empty");
         }
-        public void ValidateGetDriverActiveTrip(string driverId)
+        public async Task ValidateGetDriverActiveTrip(string driverId)
         {
             if (string.IsNullOrWhiteSpace(driverId))
                 throw new ArgumentException(driverId);
         }
-        public void ValidateGetRiderActiveTrip(string riderId)
+        public async Task ValidateGetRiderActiveTrip(string riderId)
         {
             if (string.IsNullOrWhiteSpace(riderId))
                 throw new ArgumentException(riderId);
         }
-        public void ValidateGetAllPaginated(Expression<Func<Trip, object>> orderBy,
+        public async Task ValidateGetAllPaginated(Expression<Func<Trip, object>> orderBy,
                                         bool descending = false, int pageNumber = 1, int pageSize = 10)
         {
             ArgumentNullException.ThrowIfNull(orderBy);
         }
-        public void ValidateGetAllRiderTripsPaginated(string riderId, Expression<Func<Trip, object>> orderBy,
+        public async Task ValidateGetAllRiderTripsPaginated(string riderId, Expression<Func<Trip, object>> orderBy,
                                         bool descending = false, int pageNumber = 1, int pageSize = 10)
         {
             if (string.IsNullOrWhiteSpace(riderId))
@@ -65,7 +54,7 @@ namespace Wasalnyy.BLL.Validators
 
         }
 
-        public void ValidateGetAllDriverTripsPaginated(string driverId, Expression<Func<Trip, object>> orderBy,
+        public async Task ValidateGetAllDriverTripsPaginated(string driverId, Expression<Func<Trip, object>> orderBy,
                                         bool descending = false, int pageNumber = 1, int pageSize = 10)
         {
             if (string.IsNullOrWhiteSpace(driverId))
@@ -73,7 +62,7 @@ namespace Wasalnyy.BLL.Validators
 
             ArgumentNullException.ThrowIfNull(orderBy);
         }
-        public void ValidateRequestTrip(string riderId, RequestTripDto dto)
+        public async Task ValidateRequestTrip(string riderId, RequestTripDto dto)
         {
             ArgumentNullException.ThrowIfNull(dto);
 
@@ -81,7 +70,7 @@ namespace Wasalnyy.BLL.Validators
                 throw new ArgumentException(riderId);
 
         }
-        public void ValidateAcceptTrip(string driverId, Guid tripId)
+        public async Task ValidateAcceptTrip(string driverId, Guid tripId)
         {
             if (string.IsNullOrWhiteSpace(driverId))
                 throw new ArgumentException(driverId);
@@ -89,7 +78,7 @@ namespace Wasalnyy.BLL.Validators
             if (tripId == Guid.Empty)
                 throw new ArgumentException($"tripId '{tripId}' is empty");
         }
-        public void ValidateStartTrip(string driverId, Guid tripId)
+        public async Task ValidateStartTrip(string driverId, Guid tripId)
         {
             if (string.IsNullOrWhiteSpace(driverId))
                 throw new ArgumentException(driverId);
@@ -97,7 +86,7 @@ namespace Wasalnyy.BLL.Validators
             if (tripId == Guid.Empty)
                 throw new ArgumentException($"tripId '{tripId}' is empty");
         }
-        public void ValidateEndTrip(string driverId, Guid tripId)
+        public async Task ValidateEndTrip(string driverId, Guid tripId)
         {
             if (string.IsNullOrWhiteSpace(driverId))
                 throw new ArgumentException(driverId);
@@ -106,13 +95,13 @@ namespace Wasalnyy.BLL.Validators
                 throw new ArgumentException($"tripId '{tripId}' is empty");
         }
 
-        public void ValidateGetPagesCount(int pageSize)
+        public async Task ValidateGetPagesCount(int pageSize)
         {
             if (pageSize <= 0)
                 throw new ArgumentOutOfRangeException(nameof(pageSize), "Page size must be at least 1.");
         }
 
-        public void ValidateGetRiderTripsPagesCount(string riderId, int pageSize)
+        public async Task ValidateGetRiderTripsPagesCount(string riderId, int pageSize)
         {
             if (string.IsNullOrWhiteSpace(riderId))
                 throw new ArgumentException(riderId);
@@ -121,7 +110,7 @@ namespace Wasalnyy.BLL.Validators
                 throw new ArgumentOutOfRangeException(nameof(pageSize), "Page size must be at least 1.");
         }
 
-        public void ValidateGetDriverTripsPagesCount(string driverId, int pageSize)
+        public async Task ValidateGetDriverTripsPagesCount(string driverId, int pageSize)
         {
             if (string.IsNullOrWhiteSpace(driverId))
                 throw new ArgumentException(driverId);
@@ -130,7 +119,7 @@ namespace Wasalnyy.BLL.Validators
                 throw new ArgumentOutOfRangeException(nameof(pageSize), "Page size must be at least 1.");
         }
 
-        public void ValidateUpdateTripLocation(Guid tripId, Coordinates coordinates)
+        public async Task ValidateUpdateTripLocation(Guid tripId, Coordinates coordinates)
         {
             ArgumentNullException.ThrowIfNull(coordinates);
 

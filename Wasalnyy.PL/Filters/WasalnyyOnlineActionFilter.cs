@@ -1,8 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.Filters;
-using System.Security.Claims;
-using Wasalnyy.BLL.Exceptions;
-
-namespace Wasalnyy.PL.Filters
+﻿namespace Wasalnyy.PL.Filters
 {
     public class WasalnyyOnlineActionFilter : IAsyncActionFilter
     {
@@ -12,7 +8,6 @@ namespace Wasalnyy.PL.Filters
         {
             _wasalnyyHubService = wasalnyyHubService;
         }
-
 
         public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {

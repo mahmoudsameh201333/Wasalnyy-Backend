@@ -1,8 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR;
-using System.Data;
-using Wasalnyy.BLL.Exceptions;
-
-namespace Wasalnyy.PL.Filters
+﻿namespace Wasalnyy.PL.Filters
 {
     public class SignalRExceptionFilter : IHubFilter
     {

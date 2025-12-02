@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Wasalnyy.DAL.Database;
-using Wasalnyy.DAL.Entities;
-using Wasalnyy.DAL.Repo.Abstraction;
-
-namespace Wasalnyy.DAL.Repo.Implementation
+﻿namespace Wasalnyy.DAL.Repo.Implementation
 {
     public class ZoneRepo : IZoneRepo
     {

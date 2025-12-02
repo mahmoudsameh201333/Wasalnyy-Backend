@@ -1,11 +1,4 @@
-﻿using Azure;
-using Microsoft.AspNetCore.Http;
-using System.Data;
-using System.Net;
-using System.Text.Json;
-using Wasalnyy.BLL.Exceptions;
-
-namespace Wasalnyy.PL.Middleware
+﻿namespace Wasalnyy.PL.Middleware
 {
     public class ExptionhandlingMiddleware
     {
@@ -25,10 +18,8 @@ namespace Wasalnyy.PL.Middleware
                 int statusCode;
                 string errorType;
                 
-
                 switch (ex)
                 {
-
                     case ArgumentNullException:
                     case ArgumentException:
                     case InvalidOperationException:

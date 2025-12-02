@@ -1,15 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using Wasalnyy.DAL.Database;
-using Wasalnyy.DAL.Entities;
-using Wasalnyy.DAL.Enum;
-using Wasalnyy.DAL.Repo.Abstraction;
-
-namespace Wasalnyy.DAL.Repo.Implementation
+﻿namespace Wasalnyy.DAL.Repo.Implementation
 {
     public class TripRepo : ITripRepo
     {
@@ -141,11 +130,6 @@ namespace Wasalnyy.DAL.Repo.Implementation
                 .Include(t => t.Driver)
                 .Include(t => t.Rider)
                 .ToListAsync();
-        }
-
-        public Task<double> GetTripDurationAsync(Guid id)
-        {
-            throw new NotImplementedException();
         }
     }
 }

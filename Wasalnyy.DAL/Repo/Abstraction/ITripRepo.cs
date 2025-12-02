@@ -1,7 +1,4 @@
-﻿using System.Linq.Expressions;
-using Wasalnyy.DAL.Entities;
-
-namespace Wasalnyy.DAL.Repo.Abstraction
+﻿namespace Wasalnyy.DAL.Repo.Abstraction
 {
     public interface ITripRepo
     {
@@ -25,6 +22,5 @@ namespace Wasalnyy.DAL.Repo.Abstraction
         Task<int> GetDriverTripsCountAsync(string driverId);
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
         Task<IEnumerable<Trip>> GetTripsByStatusAsync(TripStatus status);
-        Task<double> GetTripDurationAsync(Guid id);
     }
 }

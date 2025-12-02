@@ -53,7 +53,7 @@ namespace Wasalnyy.BLL.Mapper
             CreateMap<RequestTripDto, Trip>()
                 .ForMember(dest => dest.PaymentMethod, opt => opt.MapFrom(src => src.PaymentMethod))
                 .ForMember(dest => dest.PickupCoordinates, opt => opt.MapFrom(src => src.PickupCoordinates))
-                .ForMember(dest => dest.DistinationCoordinates, opt => opt.MapFrom(src => src.DistinationCoordinates))
+                .ForMember(dest => dest.DestinationCoordinates, opt => opt.MapFrom(src => src.DestinationCoordinates))
                 .ForMember(dest => dest.RequestedDate, opt => opt.MapFrom(_ => DateTime.UtcNow))
                 .ForMember(dest => dest.TripStatus, opt => opt.MapFrom(_ => TripStatus.Requested))
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(_ => Guid.NewGuid()))

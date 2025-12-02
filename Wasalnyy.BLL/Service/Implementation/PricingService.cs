@@ -1,27 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime;
-using System.Text;
-using System.Threading.Tasks;
-using Wasalnyy.BLL.DTO.Pricing;
-using Wasalnyy.BLL.Service.Abstraction;
-using Wasalnyy.BLL.Settings;
-
-namespace Wasalnyy.BLL.Service.Implementation
+﻿namespace Wasalnyy.BLL.Service.Implementation
 {
     public class PricingService : IPricingService
     {
         private readonly PricingSettings _settings;
+        private readonly PricingServiceValidator _validator;
 
-        public PricingService(PricingSettings settings)
+        public PricingService(PricingSettings settings, PricingServiceValidator validator)
         {
             _settings = settings;
+            _validator = validator;
         }
 
-
-        public double CalculatePrice(CalculatePriceDto dto)
+        public async Task<double> CalculatePriceAsync(CalculatePriceDto dto)
         {
+            await _validator.ValidateCalculatePrice(dto);
+
             var total = _settings.BaseFare
                                     + (dto.DistanceKm * _settings.PricePerKm)
                                     + (dto.DurationMinutes * _settings.PricePerMinute);

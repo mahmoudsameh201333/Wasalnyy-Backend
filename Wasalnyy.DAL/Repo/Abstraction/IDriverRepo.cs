@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Wasalnyy.DAL.Entities;
-using Wasalnyy.DAL.Enum;
-
-namespace Wasalnyy.DAL.Repo.Abstraction
+﻿namespace Wasalnyy.DAL.Repo.Abstraction
 {
     public interface IDriverRepo
     {

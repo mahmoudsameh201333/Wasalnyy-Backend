@@ -33,7 +33,7 @@
                     .IsRequired();
             });
 
-            builder.OwnsOne(e => e.DistinationCoordinates, ownedNavigationBuilder =>
+            builder.OwnsOne(e => e.DestinationCoordinates, ownedNavigationBuilder =>
             {
                 ownedNavigationBuilder.Property(c => c.Lat)
                     .HasConversion<decimal>()
@@ -66,6 +66,22 @@
 
             builder.Property(e => e.PaymentMethod)
                 .HasConversion<string>();
+
+            builder.HasIndex(t => t.DriverId);
+
+            builder.HasIndex(t => t.RiderId);
+
+            builder.HasIndex(t => t.ZoneId);
+
+            builder.HasIndex(t => t.TripStatus);
+
+            builder.HasIndex(t => new { t.ZoneId, t.TripStatus });
+
+            builder.HasIndex(t => new { t.DriverId, t.TripStatus });
+
+            builder.HasIndex(t => new { t.RiderId, t.TripStatus });
+
+            builder.HasIndex(t => t.RequestedDate);
         }
     }
 }

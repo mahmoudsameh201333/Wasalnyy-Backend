@@ -1,11 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Wasalnyy.BLL.DTO.Zone;
-
-namespace Wasalnyy.PL.Controllers
+﻿namespace Wasalnyy.PL.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize("Admin")]
     public class ZoneController : ControllerBase
     {
         private readonly IZoneService _zoneService;
@@ -26,7 +23,5 @@ namespace Wasalnyy.PL.Controllers
             await _zoneService.CreateZoneAsync(dto);
             return Created();
         }
-
-
     }
 }

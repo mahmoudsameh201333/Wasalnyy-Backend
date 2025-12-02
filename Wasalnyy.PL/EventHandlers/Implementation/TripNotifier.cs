@@ -1,16 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Wasalnyy.BLL.DTO.Trip;
-using Wasalnyy.BLL.EventHandlers.Abstraction;
-using Wasalnyy.DAL.Entities;
-using Wasalnyy.DAL.Enum;
-using Wasalnyy.PL.Hubs;
-
-namespace Wasalnyy.PL.EventHandlers.Implementation
+﻿namespace Wasalnyy.PL.EventHandlers.Implementation
 {
     public class TripNotifier : ITripNotifier
     {
@@ -127,8 +115,6 @@ namespace Wasalnyy.PL.EventHandlers.Implementation
                 }
             }
         }
-
-        
 
         public async Task OnTripStarted(TripDto dto)
         {

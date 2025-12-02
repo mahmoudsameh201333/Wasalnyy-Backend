@@ -1,31 +1,21 @@
-﻿using AutoMapper;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-using Wasalnyy.BLL.DTO.Zone;
-using Wasalnyy.BLL.Exceptions;
-using Wasalnyy.BLL.Helper;
-using Wasalnyy.BLL.Service.Abstraction;
-using Wasalnyy.DAL.Entities;
-using Wasalnyy.DAL.Repo.Abstraction;
-
-namespace Wasalnyy.BLL.Service.Implementation
+﻿namespace Wasalnyy.BLL.Service.Implementation
 {
     public class ZoneService : IZoneService
     {
         private readonly IZoneRepo _zoneRepo;
+        private readonly ZoneServiceValidator _validator;
         private readonly IMapper _mapper;
 
-        public ZoneService(IZoneRepo zoneRepo, IMapper mapper) 
+        public ZoneService(IZoneRepo zoneRepo, ZoneServiceValidator validator, IMapper mapper) 
         {
             _zoneRepo = zoneRepo;
+            _validator = validator;
             _mapper = mapper;
         }
         public async Task CreateZoneAsync(CreateZoneDto dto)
         {
+            await _validator.ValidateCreateZone(dto);
+
             var zone = _mapper.Map<CreateZoneDto, Zone>(dto);
 
             (zone.MinLat, zone.MaxLat, zone.MinLng, zone.MaxLng) = ZoneHelper.GetBoundingBoxAsync(zone.Coordinates.ToList());
@@ -36,6 +26,8 @@ namespace Wasalnyy.BLL.Service.Implementation
 
         public async Task DeleteZoneAsync(Guid zoneId)
         {
+            await _validator.ValidateDeleteZone(zoneId);
+
             await _zoneRepo.DeleteAsync(zoneId);
             await _zoneRepo.SaveChangesAsync();
         }
@@ -47,11 +39,15 @@ namespace Wasalnyy.BLL.Service.Implementation
 
         public async Task<ReturnZoneDto?> GetByIdAsync(Guid zoneId)
         {
+            await _validator.ValidateGetById(zoneId);
+
             return _mapper.Map<Zone?, ReturnZoneDto?>(await _zoneRepo.GetByIdAsync(zoneId));
         }
 
         public async Task<ReturnZoneDto?> GetZoneAsync(Coordinates coordinate)
         {
+            await _validator.ValidateGetZone(coordinate);
+
             var candidateZones = await _zoneRepo.GetCandidateZonesAsync(coordinate);
 
             foreach (var zone in candidateZones)
@@ -60,11 +56,12 @@ namespace Wasalnyy.BLL.Service.Implementation
                     return _mapper.Map<Zone, ReturnZoneDto>(zone);
             }
             return null;
-            //throw new OutOfZoneException($"Coordinates '{coordinate.Lat} ,{coordinate.Lng}' out of zone.");
         }
 
         public async Task UpdateZoneAsync(Guid zoneId, UpdateZoneDto dto)
         {
+            await _validator.ValidateUpdateZone(zoneId, dto);
+
             var zone = await _zoneRepo.GetByIdAsync(zoneId);
 
             if (zone == null)

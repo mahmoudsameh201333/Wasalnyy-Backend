@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Wasalnyy.DAL.Database;
-using Wasalnyy.DAL.Entities;
-using Wasalnyy.DAL.Enum;
-using Wasalnyy.DAL.Repo.Abstraction;
-
-namespace Wasalnyy.DAL.Repo.Implementation
+﻿namespace Wasalnyy.DAL.Repo.Implementation
 {
     public class DriverRepo : IDriverRepo
     {
@@ -91,7 +82,5 @@ namespace Wasalnyy.DAL.Repo.Implementation
                 .AsNoTracking()
                 .CountAsync(d=>d.IsDeleted==false);
         }
-
-
     }
 }

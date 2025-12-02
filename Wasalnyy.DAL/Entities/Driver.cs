@@ -10,8 +10,6 @@
 		public List<Trip>? Trips { get; set; } = new List<Trip>();
         public Guid? ZoneId { get; set; }
         public Zone? Zone { get; set; }
-
         public Coordinates? Coordinates { get; set; }
-
     }
 }

@@ -1,12 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
-using Wasalnyy.BLL.DTO.Trip;
-using Wasalnyy.BLL.DTO.Zone;
-using Wasalnyy.PL.Filters;
-
-namespace Wasalnyy.PL.Controllers
+﻿namespace Wasalnyy.PL.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

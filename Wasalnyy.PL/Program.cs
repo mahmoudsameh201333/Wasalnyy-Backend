@@ -75,7 +75,6 @@ namespace Wasalnyy.PL
 			builder.Services.AddBussinessInDAL();
 			builder.Services.AddHttpClient();
 			builder.Services.AddSingleton<IDriverNotifier, DriverNotifier>();
-			builder.Services.AddSingleton<IRiderNotifier, RiderNotifier>();
 			builder.Services.AddSingleton<ITripNotifier, TripNotifier>();
 			builder.Services.AddSingleton<IWasalnyyHubNotifier, WasalnyyHubNotifier>();
 

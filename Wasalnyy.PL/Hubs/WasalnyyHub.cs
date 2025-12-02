@@ -1,9 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.SignalR;
-using System.Security.Claims;
-using Wasalnyy.BLL.Enents;
-
-namespace Wasalnyy.PL.Hubs
+﻿namespace Wasalnyy.PL.Hubs
 {
     [Authorize(Roles = "Driver,Rider")]
     public class WasalnyyHub : Hub

@@ -1,54 +1,39 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Wasalnyy.BLL.DTO.Trip;
-using Wasalnyy.DAL.Enum;
-
-namespace Wasalnyy.BLL.Enents
+﻿namespace Wasalnyy.BLL.Enents
 {
     public class DriverEvents
     {
-        public delegate Task DriverDel(string driverId);
-        public delegate Task DriverStatusChangedToInTripDel(string driverId, Guid tripId);
-        public delegate Task DriverLocationUpdatedDel(string driverId, Coordinates coordinate);
-        public delegate Task DriverZoneDel(string driverId, Guid zoneId);
-        public delegate Task DriverZoneChangedDel(string driverId, Guid? oldZoneId, Guid newZoneId);
+        public event Func<string, Task>? DriverStatusChangedToUnAvailable;
+        public event Func<string, Task>? DriverOutOfZone;
+        public event Func<string, Guid, Task>? DriverStatusChangedToAvailable;
 
-        public event DriverDel? DriverStatusChangedToUnAvailable;
-        public event DriverDel? DriverOutOfZone;
-        public event DriverZoneDel? DriverStatusChangedToAvailable;
+        public event Func<string, Coordinates, Task>? DriverLocationUpdated;
+        public event Func<string, Guid?, Guid, Task>? DriverZoneChanged;
 
-        public event DriverLocationUpdatedDel? DriverLocationUpdated;
-        public event DriverZoneChangedDel? DriverZoneChanged;
-
-        public void FireDriverStatusChangedToUnAvailable(string driverId)
+        public async Task FireDriverStatusChangedToUnAvailable(string driverId)
         {
-            DriverStatusChangedToUnAvailable?.Invoke(driverId).Wait();
+            if(DriverStatusChangedToUnAvailable != null)
+                await DriverStatusChangedToUnAvailable.Invoke(driverId);
         }
-        public void FireDriverOutOfZone(string driverId)
+        public async Task FireDriverOutOfZone(string driverId)
         {
-            DriverOutOfZone?.Invoke(driverId).Wait();
+            if(DriverOutOfZone != null)
+                await DriverOutOfZone.Invoke(driverId);
         }
-
-        //public void FireDriverStatusChangedToInTrip(string driverId, Guid tripId)
-        //{
-        //    DriverStatusChangedToInTrip?.Invoke(driverId, tripId).Wait();
-        //}
-
-        public void FireDriverStatusChangedToAvailable(string driverId, Guid zoneId)
+        public async Task FireDriverStatusChangedToAvailable(string driverId, Guid zoneId)
         {
-            DriverStatusChangedToAvailable?.Invoke(driverId, zoneId).Wait();
+            if(DriverStatusChangedToAvailable != null)
+                await DriverStatusChangedToAvailable.Invoke(driverId, zoneId);
         }
 
-        public void FireDriverLocationUpdated(string driverId, Coordinates coordinate)
+        public async Task FireDriverLocationUpdated(string driverId, Coordinates coordinate)
         {
-            DriverLocationUpdated?.Invoke(driverId, coordinate).Wait();
+            if(DriverLocationUpdated != null)
+                await DriverLocationUpdated.Invoke(driverId, coordinate);
         }
-        public void FireDriverZoneChanged(string driverId, Guid? oldZoneId, Guid newZoneId)
+        public async Task FireDriverZoneChanged(string driverId, Guid? oldZoneId, Guid newZoneId)
         {
-            DriverZoneChanged?.Invoke(driverId, oldZoneId, newZoneId).Wait();
+            if(DriverZoneChanged != null)
+                await DriverZoneChanged.Invoke(driverId, oldZoneId, newZoneId);
         }
     }
 }

@@ -1,46 +1,42 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Wasalnyy.BLL.DTO.Trip;
-
-namespace Wasalnyy.BLL.Enents
+﻿namespace Wasalnyy.BLL.Enents
 {
     public class TripEvents
     {
-        public delegate Task TripDel(TripDto dto);
-        public delegate Task CancelTripDel(TripDto dto, TripStatus oldStatus, CashCancelationFees? cashCancelationFees);
-        public event TripDel? TripRequested;
-        public event TripDel? TripAccepted;
-        public event TripDel? TripStarted;
-        public event TripDel? TripEnded;
-        public event CancelTripDel? TripCanceled;
-        public event TripDel? TripConfirmed;
-        public void FireTripRequested(TripDto dto)
+        public event Func<TripDto, Task>? TripRequested;
+        public event Func<TripDto, Task>? TripAccepted;
+        public event Func<TripDto, Task>? TripConfirmed;
+        public event Func<TripDto, Task>? TripStarted;
+        public event Func<TripDto, Task>? TripEnded;
+        public event Func<TripDto, TripStatus, CashCancelationFees?, Task>? TripCanceled;
+        public async Task FireTripRequested(TripDto dto)
         {
-            TripRequested?.Invoke(dto);
+            if (TripRequested != null) 
+                await TripRequested.Invoke(dto);
         }
-        public void FireTripAccepted(TripDto dto)
+        public async Task FireTripAccepted(TripDto dto)
         {
-            TripAccepted?.Invoke(dto).Wait();
+            if (TripAccepted != null)
+                await TripAccepted.Invoke(dto);
         }
-        public void FireTripStarted(TripDto dto)
+        public async Task FireTripStarted(TripDto dto)
         {
-            TripStarted?.Invoke(dto).Wait();
+            if (TripStarted != null)
+                await TripStarted.Invoke(dto);
         }
-        public void FireTripEnded(TripDto dto)
+        public async Task FireTripEnded(TripDto dto)
         {
-            TripEnded?.Invoke(dto).Wait();
+            if (TripEnded != null)
+                await TripEnded.Invoke(dto);
         }
-        public void FireTripCanceled(TripDto dto, TripStatus oldStatus , CashCancelationFees? cashCancelationFees)
+        public async Task FireTripCanceled(TripDto dto, TripStatus oldStatus , CashCancelationFees? cashCancelationFees)
         {
-            TripCanceled?.Invoke(dto, oldStatus, cashCancelationFees).Wait();
+            if (TripCanceled != null)
+                await TripCanceled.Invoke(dto, oldStatus, cashCancelationFees);
         }
-
-        public void FireTripConfirmed(TripDto dto)
+        public async Task FireTripConfirmed(TripDto dto)
         {
-            TripConfirmed?.Invoke(dto).Wait();
+            if (TripConfirmed != null)
+                await TripConfirmed.Invoke(dto);
         }
     }
 }

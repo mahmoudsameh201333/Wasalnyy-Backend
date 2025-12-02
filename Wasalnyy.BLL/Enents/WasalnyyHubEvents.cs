@@ -1,20 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Wasalnyy.DAL.Entities;
-
-namespace Wasalnyy.BLL.Enents
+﻿namespace Wasalnyy.BLL.Enents
 {
     public class WasalnyyHubEvents
     {
-        public delegate Task UserConnectedDel(string userId, string connectionId);
-        public delegate Task UserDisconnectedDel(string connectionId);
-
-
-        public event UserConnectedDel? UserConnected;
-        public event UserDisconnectedDel? UserDisconnected;
+        public event Func<string, string, Task>? UserConnected;
+        public event Func<string, Task>? UserDisconnected;
 
         public async Task FireUserConnectedAsync(string userId, string connectionId)
         {

@@ -1,38 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-using Wasalnyy.BLL.Service.Abstraction;
-using Wasalnyy.DAL.Entities;
-
-namespace Wasalnyy.BLL.Service.Implementation
+﻿namespace Wasalnyy.BLL.Service.Implementation
 {
     public class RouteService : IRouteService
     {
-        private readonly HttpClient _httpClient;
+        private readonly IEnumerable<IRouteProvider> _providers;
+        private readonly RouteServiceValidator _validator;
 
-        public RouteService(HttpClient httpClient)
+        public RouteService(IEnumerable<IRouteProvider> providers, RouteServiceValidator validator)
         {
-            _httpClient = httpClient;
+            _providers = providers;
+            _validator = validator;
         }
         public async Task<(double distanceKm, double durationMinutes)> CalculateDistanceAndDurationAsync(Coordinates start, Coordinates end)
         {
-            var url = $"https://router.project-osrm.org/route/v1/driving/{start.Lng},{start.Lat};{end.Lng},{end.Lat}?overview=false";
-            
-            var response = await _httpClient.GetStringAsync(url);
-            var json = JsonDocument.Parse(response);
+            await _validator.ValidateCalculateDistanceAndDuration(start, end);
 
-            var route = json.RootElement.GetProperty("routes")[0];
-            var distanceMeters = route.GetProperty("distance").GetDouble();
-            var durationSeconds = route.GetProperty("duration").GetDouble();
+            foreach (var provider in _providers)
+            {
+                var result = await provider.GetRouteAsync(start, end);
+                if (result != null)
+                    return result.Value;
+            }
 
-            double distanceKm = distanceMeters / 1000.0;
-            double durationMinutes = durationSeconds / 60.0;
+            (double distanceKm, double durationMinutes ) = GeoMath.CalculateFallbackRoute(start, end);
 
-            return (distanceKm, durationMinutes);
+            return GeoMath.CalculateFallbackRoute(start, end);
         }
     }
 }

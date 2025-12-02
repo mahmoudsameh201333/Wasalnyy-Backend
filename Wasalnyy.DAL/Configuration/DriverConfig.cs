@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Wasalnyy.DAL.Configuration
+﻿namespace Wasalnyy.DAL.Configuration
 {
     internal class DriverConfig : IEntityTypeConfiguration<Driver>
     {
@@ -21,11 +15,23 @@ namespace Wasalnyy.DAL.Configuration
                     .HasConversion<decimal>()
                     .HasColumnName("Lng")
                     .IsRequired();
+
+                ownedNavigationBuilder.HasIndex(c => c.Lat);
+                ownedNavigationBuilder.HasIndex(c => c.Lng);
+                ownedNavigationBuilder.HasIndex(c => new { c.Lat, c.Lng });
             });
 
 
             builder.Property(e => e.DriverStatus)
                 .HasConversion<string>();
+
+            builder.HasIndex(d => new { d.ZoneId, d.DriverStatus });
+
+            builder.HasIndex(d => d.License)
+                .IsUnique();
+
+
+            builder.HasIndex(d => d.IsDeleted);
         }
     }
 }

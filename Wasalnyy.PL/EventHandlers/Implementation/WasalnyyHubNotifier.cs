@@ -1,12 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.SignalR;
-using Wasalnyy.BLL.EventHandlers.Abstraction;
-using Wasalnyy.BLL.Exceptions;
-using Wasalnyy.DAL.Entities;
-using Wasalnyy.DAL.Enum;
-using Wasalnyy.PL.Hubs;
-
-namespace Wasalnyy.PL.EventHandlers.Implementation
+﻿namespace Wasalnyy.PL.EventHandlers.Implementation
 {
     public class WasalnyyHubNotifier : IWasalnyyHubNotifier
     {
@@ -73,7 +65,6 @@ namespace Wasalnyy.PL.EventHandlers.Implementation
 
             throw new UnauthorizedAccessException();            
         }
-
         public async Task OnUserDisconnected(string connectionId)
         {
             var _connectionService = _serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<IWasalnyyHubService>();

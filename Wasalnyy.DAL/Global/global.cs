@@ -6,3 +6,7 @@ global using Wasalnyy.DAL.Enum;
 global using System.ComponentModel.DataAnnotations.Schema;
 global using System.ComponentModel.DataAnnotations;
 global using Microsoft.EntityFrameworkCore.Metadata.Builders;
+global using System.Linq.Expressions;
+global using Wasalnyy.DAL.Database;
+global using Wasalnyy.DAL.Repo.Abstraction;
+global using Newtonsoft.Json;
