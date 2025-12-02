@@ -67,9 +67,10 @@ namespace Wasalnyy.BLL.Service.Implementation
                 wallet.Balance += increaseWalletDTO.Amount;
                 wallet.ModifiedAt = increaseWalletDTO.DateTime;
                 await _walletRepo.UpdateWalletAsync(wallet);
+                await _walletRepo.SaveChangesAsync();
 
-                
-              var res=  await walletTransactionService.CreateAsync(new CreateWalletTransactionLogDTO
+
+                var res =  await walletTransactionService.CreateAsync(new CreateWalletTransactionLogDTO
                 {
                     WalletId = wallet.Id,
                     Amount = increaseWalletDTO.Amount,
@@ -99,63 +100,49 @@ namespace Wasalnyy.BLL.Service.Implementation
            
         }
 
+
+
         public async Task<TransferWalletResponse> HandleTransferWalletMoneyFromRiderToDriver(TransferMoneyBetweenUsersDTO transferDto)
         {
+            // VALIDATE EVERYTHING FIRST (before starting transaction)
+            var rider = await riderService.GetByIdAsync(transferDto.RiderId);
+            if (rider == null)
+                return new TransferWalletResponse(false, "Rider not found");
 
-            int x = 0;
-            //DriverRepo driverRepo = new DriverRepo(_context);
-            //ReturnDriverDto driver2 = await driverService.GetByIdAsync("f3aabcbe-a853-4cb9-8409-c010f560f2dc");
-             
+            var driver = await driverService.GetByIdAsync(transferDto.DriverId);
+            if (driver == null)
+                return new TransferWalletResponse(false, "Driver not found");
 
+            var trip = await tripRepo.GetByIdAsync(transferDto.TripId);
+            if (trip == null)
+                return new TransferWalletResponse(false, "Trip not found");
 
+            var riderWallet = await _walletRepo.GetWalletOfUserIdAsync(transferDto.RiderId);
+            if (riderWallet == null)
+                return new TransferWalletResponse(false, "Rider Wallet not found");
 
-            using var transaction =  await _walletRepo.BeginTransactionAsync();
+            var driverWallet = await _walletRepo.GetWalletOfUserIdAsync(transferDto.DriverId);
+            if (driverWallet == null)
+                return new TransferWalletResponse(false, "Driver Wallet not found");
+
+            if (riderWallet.Balance < transferDto.Amount)
+                return new TransferWalletResponse(false, "Insufficient balance");
+
+            // NOW start transaction - all validations passed
+            using var transaction = await _walletRepo.BeginTransactionAsync();
 
             try
             {
-                //1-check if this rider valid or not  
-                var rider = await riderService.GetByIdAsync(transferDto.RiderId);
-                if (rider == null)
-                    return new TransferWalletResponse(false, "Rider not found ");
-                //2-check if this driver valid or not
-                var driver = await driverService.GetByIdAsync(transferDto.DriverId);
-                if (driver == null)
-                    return new TransferWalletResponse(false, "Driver not found ");
-                // 3- Get wallets
-                var riderWallet = await _walletRepo.GetWalletOfUserIdAsync(transferDto.RiderId);
-                var driverWallet = await _walletRepo.GetWalletOfUserIdAsync(transferDto.DriverId);
-
-                if (riderWallet == null )
-                    return new TransferWalletResponse(false, "Rider Wallet not found ");
-
-                if ( driverWallet == null)
-                    return new TransferWalletResponse(false, "Driver Wallet not found ");
-
-                // 4- Check balance
-                if (riderWallet.Balance < transferDto.Amount)
-                    return new TransferWalletResponse(false, "Insufficient balance");
-
-                //3-check if the trip id is exist or not 
-
-                
-              var trip=  await tripRepo.GetByIdAsync(transferDto.TripId);
-                if (trip == null)
-                    return new TransferWalletResponse(false, "Transfering failed Trip not found ");
-
-                // 5- update balances and update Lasttimeupdatedate date 
+                // Update balances
                 riderWallet.Balance -= transferDto.Amount;
                 driverWallet.Balance += transferDto.Amount;
-
-
                 riderWallet.ModifiedAt = transferDto.CreatedAt;
                 driverWallet.ModifiedAt = transferDto.CreatedAt;
 
-                await   _walletRepo.UpdateWalletWithoutSaving(riderWallet);
-                await   _walletRepo.UpdateWalletWithoutSaving(driverWallet);
+                await _walletRepo.UpdateWalletWithoutSaving(riderWallet);
+                await _walletRepo.UpdateWalletWithoutSaving(driverWallet);
 
-
-                //6- create  WALLET transaction log for both wallets
-                //Rider wallet TransactionLog
+                // Create transaction logs...
                 var res = await walletTransactionService.CreateAsync(new CreateWalletTransactionLogDTO
                 {
                     WalletId = riderWallet.Id,
@@ -163,74 +150,187 @@ namespace Wasalnyy.BLL.Service.Implementation
                     TransactionType = DAL.Enum.WalletTransactionType.Debit,
                     Description = $"Rider Pay {transferDto.Amount} for trip ID {trip.Id} to Driver Id{driver.Id}",
                     CreatedAt = transferDto.CreatedAt
-
                 });
 
                 if (!res.isSuccess)
                 {
                     await transaction.RollbackAsync();
-
-                    return new TransferWalletResponse(false, $"Transfering failed An error occurred while creating wallet transaction log: {res.Message}");
+                    return new TransferWalletResponse(false, $"Failed to create rider transaction log: {res.Message}");
                 }
-                //Driver wallet transaction log
+
                 var res2 = await walletTransactionService.CreateAsync(new CreateWalletTransactionLogDTO
                 {
                     WalletId = driverWallet.Id,
                     Amount = transferDto.Amount,
                     TransactionType = DAL.Enum.WalletTransactionType.Credit,
-                    Description = $"Driver recieve {transferDto.Amount} for trip ID {trip.Id} from Rider Id{rider.RiderId}",
+                    Description = $"Driver receive {transferDto.Amount} for trip ID {trip.Id} from Rider Id{rider.RiderId}",
                     CreatedAt = transferDto.CreatedAt
-
                 });
 
                 if (!res2.isSuccess)
                 {
                     await transaction.RollbackAsync();
-
-                    return new TransferWalletResponse(false, $"Transfering failed An error occurred while creating wallet transaction log: {res2.Message}");
+                    return new TransferWalletResponse(false, $"Failed to create driver transaction log: {res2.Message}");
                 }
 
-                //7-insert this transfer transaction in the transferTransaction table
-
-              var res3=  await WalletMoneyTransfersService.AddAsync(new AddWalletTranferMoneyDTO
+                var res3 = await WalletMoneyTransfersService.AddAsync(new AddWalletTranferMoneyDTO
                 {
-
                     CreatedAt = transferDto.CreatedAt,
                     Amount = transferDto.Amount,
                     SenderWalletId = riderWallet.Id,
                     ReceiverWalletId = driverWallet.Id,
                     TripId = transferDto.TripId,
-
                 });
 
                 if (!res3.IsSuccess)
                 {
                     await transaction.RollbackAsync();
-
-                    return new TransferWalletResponse(false, $"Transfering failed An error occurred while inserting Transfer Transaction  {res2.Message}");
+                    return new TransferWalletResponse(false, $"Failed to create transfer record: {res3.Message}");
                 }
 
-                // 8- save all changes
+                // Save all changes
                 await _walletRepo.SaveChangesAsync();
 
-                // 9- commit
+                // Commit transaction
                 await transaction.CommitAsync();
 
                 return new TransferWalletResponse(true, "Transfer completed successfully");
             }
             catch (Exception ex)
             {
-                // rollback
                 await transaction.RollbackAsync();
-
-                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
                 return new TransferWalletResponse(false, $"Transaction failed: {innerMessage}");
             }
-
-
-           
-
         }
+        //public async Task<TransferWalletResponse> HandleTransferWalletMoneyFromRiderToDriver(TransferMoneyBetweenUsersDTO transferDto)
+        //{
+
+
+        //    //1-check if this rider valid or not  
+        //    var rider = await riderService.GetByIdAsync(transferDto.RiderId);
+        //    if (rider == null)
+        //        return new TransferWalletResponse(false, "Rider not found ");
+        //    //2-check if this driver valid or not
+        //    var driver = await driverService.GetByIdAsync(transferDto.DriverId);
+        //    if (driver == null)
+        //        return new TransferWalletResponse(false, "Driver not found ");
+
+        //    using var transaction =  await _walletRepo.BeginTransactionAsync();
+
+        //    try
+        //    {
+
+        //        // 3- Get wallets
+        //        var riderWallet = await _walletRepo.GetWalletOfUserIdAsync(transferDto.RiderId);
+        //        var driverWallet = await _walletRepo.GetWalletOfUserIdAsync(transferDto.DriverId);
+
+        //        if (riderWallet == null )
+        //            return new TransferWalletResponse(false, "Rider Wallet not found ");
+
+        //        if ( driverWallet == null)
+        //            return new TransferWalletResponse(false, "Driver Wallet not found ");
+
+        //        // 4- Check balance
+        //        if (riderWallet.Balance < transferDto.Amount)
+        //            return new TransferWalletResponse(false, "Insufficient balance");
+
+        //        //3-check if the trip id is exist or not 
+
+
+        //      var trip=  await tripRepo.GetByIdAsync(transferDto.TripId);
+        //        if (trip == null)
+        //            return new TransferWalletResponse(false, "Transfering failed Trip not found ");
+
+        //        // 5- update balances and update Lasttimeupdatedate date 
+        //        riderWallet.Balance -= transferDto.Amount;
+        //        driverWallet.Balance += transferDto.Amount;
+
+
+        //        riderWallet.ModifiedAt = transferDto.CreatedAt;
+        //        driverWallet.ModifiedAt = transferDto.CreatedAt;
+
+        //        await   _walletRepo.UpdateWalletWithoutSaving(riderWallet);
+        //        await   _walletRepo.UpdateWalletWithoutSaving(driverWallet);
+
+
+        //        //6- create  WALLET transaction log for both wallets
+        //        //Rider wallet TransactionLog
+        //        var res = await walletTransactionService.CreateAsync(new CreateWalletTransactionLogDTO
+        //        {
+        //            WalletId = riderWallet.Id,
+        //            Amount = transferDto.Amount,
+        //            TransactionType = DAL.Enum.WalletTransactionType.Debit,
+        //            Description = $"Rider Pay {transferDto.Amount} for trip ID {trip.Id} to Driver Id{driver.Id}",
+        //            CreatedAt = transferDto.CreatedAt
+
+        //        });
+
+        //        if (!res.isSuccess)
+        //        {
+        //            await transaction.RollbackAsync();
+
+        //            return new TransferWalletResponse(false, $"Transfering failed An error occurred while creating wallet transaction log: {res.Message}");
+        //        }
+        //        //Driver wallet transaction log
+        //        var res2 = await walletTransactionService.CreateAsync(new CreateWalletTransactionLogDTO
+        //        {
+        //            WalletId = driverWallet.Id,
+        //            Amount = transferDto.Amount,
+        //            TransactionType = DAL.Enum.WalletTransactionType.Credit,
+        //            Description = $"Driver recieve {transferDto.Amount} for trip ID {trip.Id} from Rider Id{rider.RiderId}",
+        //            CreatedAt = transferDto.CreatedAt
+
+        //        });
+
+        //        if (!res2.isSuccess)
+        //        {
+        //            await transaction.RollbackAsync();
+
+        //            return new TransferWalletResponse(false, $"Transfering failed An error occurred while creating wallet transaction log: {res2.Message}");
+        //        }
+
+        //        //7-insert this transfer transaction in the transferTransaction table
+
+        //      var res3=  await WalletMoneyTransfersService.AddAsync(new AddWalletTranferMoneyDTO
+        //        {
+
+        //            CreatedAt = transferDto.CreatedAt,
+        //            Amount = transferDto.Amount,
+        //            SenderWalletId = riderWallet.Id,
+        //            ReceiverWalletId = driverWallet.Id,
+        //            TripId = transferDto.TripId,
+
+        //        });
+
+        //        if (!res3.IsSuccess)
+        //        {
+        //            await transaction.RollbackAsync();
+
+        //            return new TransferWalletResponse(false, $"Transfering failed An error occurred while inserting Transfer Transaction  {res3.Message}");
+        //        }
+
+        //        // 8- save all changes
+        //        await _walletRepo.SaveChangesAsync();
+
+        //        // 9- commit
+        //        await transaction.CommitAsync();
+
+        //        return new TransferWalletResponse(true, "Transfer completed successfully");
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        // rollback
+        //        await transaction.RollbackAsync();
+
+        //        var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+        //        return new TransferWalletResponse(false, $"Transaction failed: {innerMessage}");
+        //    }
+
+
+
+
+        //}
 
         public async Task<CreateWalletResponse> CreateWalletAsync(CreateWalletDTO createWalletDTO)
         {
@@ -281,6 +381,7 @@ namespace Wasalnyy.BLL.Service.Implementation
 
             await _walletRepo.UpdateWalletAsync(wallet);
 
+            await _walletRepo.SaveChangesAsync();
 
             var res = await walletTransactionService.CreateAsync(new CreateWalletTransactionLogDTO
             {
@@ -368,6 +469,14 @@ namespace Wasalnyy.BLL.Service.Implementation
 
             return wallet != null && wallet.Balance >= amount;
             
+        }
+
+        public async Task<decimal> GetWalletBalance(string userId)
+        {
+            var wallet = await _walletRepo.GetWalletOfUserIdAsync(userId);
+            if (wallet == null)
+                throw new InvalidOperationException("Wallet not found for the specified user ID.");
+            return wallet.Balance;
         }
     }
 }

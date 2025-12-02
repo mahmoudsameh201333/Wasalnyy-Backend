@@ -115,7 +115,6 @@ namespace Wasalnyy.PL
 			app.UseMiddleware<ExptionhandlingMiddleware>();
             app.UseWebSockets();
             app.MapHub<WasalnyyHub>("/Wasalnyy");
-
             app.MapHub<ChatHub>("/Chat");
 
             app.MapControllers();

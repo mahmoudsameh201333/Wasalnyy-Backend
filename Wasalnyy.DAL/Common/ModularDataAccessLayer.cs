@@ -8,6 +8,9 @@ namespace Wasalnyy.DAL.Common
     {
         public static IServiceCollection AddBussinessInDAL(this IServiceCollection services)
         {
+            services.AddScoped<IChatRepo, ChatRepo>();
+
+
             services.AddScoped<IDriverRepo, DriverRepo>();
             services.AddScoped<IRiderRepo, RiderRepo>();
             services.AddScoped<ITripRepo, TripRepo>();

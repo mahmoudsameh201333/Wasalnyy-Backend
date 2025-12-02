@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
+using Wasalnyy.DAL.Configuration;
 
 namespace Wasalnyy.DAL.Database
 {
@@ -33,8 +35,8 @@ namespace Wasalnyy.DAL.Database
                 .Property(e => e.DriverStatus)
                 .HasConversion<string>();
         }
-
-
+        public DbSet<Message> Messages { get; set; }
+        public DbSet<ChatHubConnection> ChatHubConnections { get; set; }
         public DbSet<User> Users {  get; set; }
         public DbSet<Rider> Riders {  get; set; }
         public DbSet<Driver> Drivers {  get; set; }

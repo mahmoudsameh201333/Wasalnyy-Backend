@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Wasalnyy.BLL.DTO;
+using Wasalnyy.BLL.DTO.Chat;
 using Wasalnyy.BLL.DTO.Driver;
 using Wasalnyy.BLL.DTO.Payment;
 using Wasalnyy.BLL.DTO.Pricing;
@@ -21,7 +22,7 @@ namespace Wasalnyy.BLL.Mapper
 
             CreateMap<AddWalletTranferMoneyDTO, WalletMoneyTransfer>();
             CreateMap<CreateWalletDTO, Wallet>();
-
+            CreateMap<Message, GetMessageDTO>();
 
             CreateMap<Driver, ReturnDriverDto>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))

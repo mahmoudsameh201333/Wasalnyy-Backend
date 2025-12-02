@@ -81,11 +81,13 @@ namespace Wasalnyy.DAL.Repo.Implementation
 
         public async Task<Trip?> GetByIdAsync(Guid id)
         {
-            return await _context.Trips
+             var x= await _context.Trips
                 .Include(x => x.Driver)
                 .Include(x => x.Rider)
                 .Include(x => x.Zone)
                 .SingleOrDefaultAsync(x => x.Id == id);
+
+            return x;
         }
 
         public async Task<IEnumerable<Trip>> GetAvailableTripsByZoneAsync(Guid zoneId)

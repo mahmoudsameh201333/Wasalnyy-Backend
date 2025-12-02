@@ -36,7 +36,7 @@ namespace Wasalnyy.BLL.Common
             services.AddScoped<IWalletService, WalletService>();
             services.AddScoped<IPaymentService, paymentGetwayService>();
             services.AddScoped<IWalletMoneyTransfersService, WalletMoneyTransfersService>();
-
+            services.AddScoped<IChatHubRepo, ChatHubRepo>();
 
             services.AddScoped<IWalletMoneyTransfersRepo, WalletMoneyTransfersRepo>();
             // Register services
@@ -50,6 +50,9 @@ namespace Wasalnyy.BLL.Common
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<IPaymentService, paymentGetwayService>();
             services.AddScoped<IPasswordService, PasswordService>();
+            services.AddScoped<IChatHubService, ChatHubService>();
+            services.AddScoped<IChatService, ChatService>();
+
 
             services.AddScoped<DriverServiceValidator>();
             services.AddScoped<TripServiceValidator>();
@@ -140,6 +143,8 @@ namespace Wasalnyy.BLL.Common
             var chatHubHandler = scope.ServiceProvider.GetRequiredService<IChatHubEventHandler>();
 
             chatHubEvent.SendMessage += chatHubHandler.OnSendMessage;
+            chatHubEvent.UserDisconnected += chatHubHandler.OnUserDisconnected;
+            chatHubEvent.UserConnected += chatHubHandler.OnUserConnected;
 
             tripEvents.TripRequested += tripHandler.OnTripRequested;
             tripEvents.TripAccepted += tripHandler.OnTripAccepted;

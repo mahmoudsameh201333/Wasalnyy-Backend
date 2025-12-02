@@ -19,9 +19,13 @@ namespace Wasalnyy.DAL.Repo.Abstraction
 
         Task CreateAsync(Wallet wallet);
 
+
+
+
+
         //4of dol ya mahmoud sameh  ana mo4 3ayzhom
-      //  Task<Wallet?> GetByIdAsync(Guid walletId);
-   
+        //  Task<Wallet?> GetByIdAsync(Guid walletId);
+
 
 
     }

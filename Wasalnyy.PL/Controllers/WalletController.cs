@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using Wasalnyy.BLL.DTO;
 using Wasalnyy.BLL.DTO.Wallet;
 using Wasalnyy.BLL.Service.Abstraction;
+using Wasalnyy.DAL.Entities;
 
 namespace Wasalnyy.API.Controllers
 {
@@ -20,7 +22,7 @@ namespace Wasalnyy.API.Controllers
             _mapper = mapper;
         }
         [HttpPost("transfer-money-between-rider-driver")]
-        [Authorize(Roles = "Rider")]
+       [Authorize(Roles = "Rider")]
 
         public async Task<IActionResult> TransferMoney([FromBody] TransferMoneyBetweenUsersDTO dto)
         {
@@ -53,7 +55,18 @@ namespace Wasalnyy.API.Controllers
         }
 
 
+        [HttpGet("balance")]
+        [Authorize(Roles = "Driver,Rider")]
 
+        public async Task<IActionResult> GetWalletBalance()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return Unauthorized();
+
+            var balance = await _walletService.GetWalletBalance(userId);
+
+            return Ok(new { balance });
+        }
 
         // GET: api/wallet/user/{userId}
         //[HttpGet("user/{userId}")]
