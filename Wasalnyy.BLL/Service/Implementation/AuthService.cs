@@ -193,7 +193,14 @@ namespace Wasalnyy.BLL.Service.Implementation
 					if (!roles.Contains(role))
 						return new AuthResult { Success = false, Message = $"User is not in the '{role}' role" };
 				}
-
+				if (user.IsSuspended)
+				{
+					return new AuthResult { Success = false, Message = "Your account has been suspended. Please contact support." };
+				}
+				if(user.IsDeleted)
+				{
+					return new AuthResult { Success = false, Message = "Your account has been deleted. Please contact support." };
+				}
 				var token = await _jwtHandler.GenerateToken(user);
 				return new AuthResult { Success = true, Message = "Login successful", Token = token };
 			}
