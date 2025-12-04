@@ -26,6 +26,15 @@ namespace Wasalnyy.PL.Controllers
 			return Ok(new { result.Message, result.Token });
 		}
 
+		[HttpPost("google-login")]
+		public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginDto dto)
+		{
+			var result = await _authService.GoogleLoginAsync(dto);
+			if (!result.Success)
+				return BadRequest(result);
+			return Ok(result);
+		}
+
 		[HttpPost("register/driver")]
 		public async Task<IActionResult> RegisterDriver([FromBody] RegisterDriverDto dto)
 		{

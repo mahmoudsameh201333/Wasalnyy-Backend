@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
+using Google.Apis.Auth;
 using Wasalnyy.BLL.Helper;
 using Wasalnyy.DAL.Entities;
 using Wasalnyy.DAL.Repo.Abstraction;
@@ -203,6 +204,50 @@ namespace Wasalnyy.BLL.Service.Implementation
 				}
 				var token = await _jwtHandler.GenerateToken(user);
 				return new AuthResult { Success = true, Message = "Login successful", Token = token };
+			}
+			catch (Exception ex)
+			{
+				return new AuthResult { Success = false, Message = ex.Message };
+			}
+		}
+		public async Task<AuthResult> GoogleLoginAsync(GoogleLoginDto dto)
+		{
+			try
+			{
+				var payload = await GoogleJsonWebSignature.ValidateAsync(dto.IdToken);
+				if (payload == null)
+					return new AuthResult { Success = false, Message = "Invalid Google token" };
+				var user = await _userManager.FindByEmailAsync(payload.Email);
+				if (user == null)
+				{
+					user = new Rider
+					{
+						UserName = payload.GivenName,
+						Email = payload.Email,
+						FullName = payload.Name,
+						PhoneNumber = "",
+						Provider = "Google",
+						CreatedAt = DateTime.UtcNow
+					};
+					var createResult = await _userManager.CreateAsync(user);
+					if (!createResult.Succeeded)
+						return new AuthResult { Success = false, Message = "Could not create user: " + string.Join(", ", createResult.Errors.Select(e => e.Description)) };
+
+					await _userManager.AddToRoleAsync(user, "Rider");
+					await _walletService.CreateWalletAsync(new CreateWalletDTO
+					{
+						Balance = 0,
+						UserId = user.Id,
+						CreatedAt = DateTime.Now
+					});
+				}
+				if (user.IsSuspended)
+					return new AuthResult { Success = false, Message = "Your account is suspended." };
+				if (user.IsDeleted)
+					return new AuthResult { Success = false, Message = "Your account was deleted." };
+
+				var token = await _jwtHandler.GenerateToken(user);
+				return new AuthResult { Success = true, Message = "Google login successful", Token = token };
 			}
 			catch (Exception ex)
 			{
