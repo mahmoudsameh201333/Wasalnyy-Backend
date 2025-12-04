@@ -13,7 +13,7 @@ namespace Wasalnyy.BLL.Service.Implementation
         private readonly IChatRepo _messageRepo;
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
-        public ChatService(IChatRepo messageRepo, UserManager<User> userManager,IMapper mapper)
+        public ChatService(IChatRepo messageRepo, UserManager<User> userManager, IMapper mapper)
         {
             _messageRepo = messageRepo;
             _userManager = userManager;
@@ -77,7 +77,7 @@ namespace Wasalnyy.BLL.Service.Implementation
 
 
             // If no messages or page out of bounds, return empty with metadata
-            if (totalPageCount == 0) 
+            if (totalPageCount == 0)
                 return new MessagePaginationDto
                 {
                     CurrentPage = pageNumber,
@@ -98,12 +98,20 @@ namespace Wasalnyy.BLL.Service.Implementation
 
             }
 
-                // Fetch messages
-                var messages = (await _messageRepo.GetConversationAsync(userId1, userId2, pageNumber, pageSize)).ToList();
+            // Fetch messages
+            var messages = (await _messageRepo.GetConversationAsync(userId1, userId2, pageNumber, pageSize)).ToList();
+            // Map messages
+            var messageDtos = _mapper.Map<List<Message>, List<GetMessageDTO>>(messages);
+
+            // Set IsMessageFromMe for each message
+            foreach (var dto in messageDtos)
+            {
+                dto.isMessageFromMe = dto.SenderId == userId1;
+            }
 
             return new MessagePaginationDto
             {
-                Messages = _mapper.Map<List<Message>, List<GetMessageDTO>>(messages),
+                Messages = messageDtos,
                 CurrentPage = pageNumber,
                 PageSize = pageSize,
                 TotalPages = totalPageCount
@@ -134,7 +142,7 @@ namespace Wasalnyy.BLL.Service.Implementation
             double noPages = Math.Ceiling((double)totalMessages / (double)pageSize);
             return (int)noPages;
         }
-       
+
         public async Task<MessagePaginationDto> GetUserMessagesAsync(string userId, int pageNumber = 1, int pageSize = 50)
         {
             // Validate and normalize inputs
@@ -196,7 +204,7 @@ namespace Wasalnyy.BLL.Service.Implementation
         {
 
             var message = await GetMessageByIdAsync(messageId);
-                if (message == null)
+            if (message == null)
                 throw new NotFoundException($"Message with ID {messageId} not found");
             await _messageRepo.MarkAsReadAsync(messageId);
             await _messageRepo.SaveChangesAsync();
@@ -205,8 +213,8 @@ namespace Wasalnyy.BLL.Service.Implementation
         public async Task MarkConversationAsReadAsync(string CurrentUser, string OtherUser)
         {
             //check if Other users exist
-            
-            var Other= await _userManager.FindByIdAsync(OtherUser);
+
+            var Other = await _userManager.FindByIdAsync(OtherUser);
             if (Other == null)
                 throw new NotFoundException($"Sender with ID {OtherUser} not found");
 
@@ -233,6 +241,74 @@ namespace Wasalnyy.BLL.Service.Implementation
 
             await _messageRepo.DeleteAsync(messageId);
             await _messageRepo.SaveChangesAsync();
+        }
+
+      
+        public async Task<ChatSidebarListReponse> GetChatSidebarList(string userId)
+        {
+            try
+            {
+                // Validate current user exists
+                var currentUser = await _userManager.FindByIdAsync(userId);
+                if (currentUser == null)
+                    throw new NotFoundException($"User with ID {userId} not found");
+
+                // Get all other users IDs that this user has chatted with
+                var otherUsersIds = (await _messageRepo.GetChatParticipantsAsync(userId)).ToList();
+
+                // Check if there are no chat participants
+                if (otherUsersIds == null || !otherUsersIds.Any())
+                {
+                    return new ChatSidebarListReponse(
+                        isSuccess: true,
+                        message: "No conversations found"
+                    );
+                }
+
+                var chatList = new List<ChatSidebarItemDTO>();
+
+                foreach (var otherUserId in otherUsersIds)
+                {
+                    // Get the other user details
+                    var otherUser = await _userManager.FindByIdAsync(otherUserId);
+                    if (otherUser == null) continue; // Skip if user not found
+
+                    // Get last message between current user and this other user
+                    var lastMessage = await _messageRepo.GetLastMessageAsync(userId, otherUserId);
+
+                    // Skip if no message found (shouldn't happen, but safety check)
+                    if (lastMessage == null) continue;
+
+                    // Get unread count specifically from this other user to current user
+                    var unreadCount = await _messageRepo.GetUnreadCountFromUserAsync(userId, otherUserId);
+
+                    chatList.Add(new ChatSidebarItemDTO
+                    {
+                        OtherUserID = otherUserId,
+                        OtherUserName = otherUser.FullName ?? "Unknown",
+                        LastMessgeContet = lastMessage.Content,
+                        LastMessageDate = lastMessage.SentAt,
+                        UnreadCount = unreadCount,
+                        IsLastMessageFromMe = lastMessage.SenderId == userId
+                    });
+                }
+
+                // Sort by last message date (most recent first)
+                chatList = chatList
+                    .OrderByDescending(c => c.LastMessageDate ?? DateTime.MinValue)
+                    .ToList();
+
+                return new ChatSidebarListReponse(chatList);
+            }
+            catch (Exception ex)
+            {
+                return new ChatSidebarListReponse(
+                    isSuccess: false,
+                    message: $"An error occurred while retrieving chat sidebar list: {ex.Message}"
+                );
+            }
+
+
         }
     }
 }

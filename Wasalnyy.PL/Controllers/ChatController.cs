@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Wasalnyy.BLL.DTO.Chat;
+using Wasalnyy.BLL.Response;
 using Wasalnyy.BLL.Service;
 
 namespace Wasalnyy.PL.Controllers
@@ -189,7 +190,23 @@ namespace Wasalnyy.PL.Controllers
 
             return Ok(new { totalPages });
         }
+        /// <summary>
+        /// Get chat sidebar list for current user (all conversations with last message and unread count)
+        /// </summary>
+        [HttpGet("sidebar")]
+        [ProducesResponseType(typeof(ChatSidebarListReponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> GetChatSidebar()
+        {
+            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-      
-    }
-}
+            if (string.IsNullOrEmpty(currentUserId))
+                return Unauthorized();
+
+            var result = await _chatService.GetChatSidebarList(currentUserId);
+
+            return Ok(result);
+        }
+
+    } 
+} 

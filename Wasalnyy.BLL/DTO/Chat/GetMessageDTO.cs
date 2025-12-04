@@ -15,6 +15,8 @@ namespace Wasalnyy.BLL.DTO.Chat
         public DateTime SentAt { get; set; }
         public bool IsRead { get; set; }
         public DateTime? ReadAt { get; set; }
+        public bool isMessageFromMe { get; set; }
+
 
     }
 }

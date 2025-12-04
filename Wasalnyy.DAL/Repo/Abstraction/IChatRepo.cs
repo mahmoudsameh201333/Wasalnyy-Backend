@@ -17,5 +17,9 @@ namespace Wasalnyy.DAL.Repo.Abstraction
         Task DeleteAsync(int messageId);
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
         Task<int> GetConversationCountAsync(string userId1, string userId2);
+        public  Task<IEnumerable<string>> GetChatParticipantsAsync(string userId);
+        public Task<int> GetUnreadCountFromUserAsync(string receiverId, string senderId);
+
+
     }
 }

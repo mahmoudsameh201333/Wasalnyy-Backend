@@ -117,7 +117,7 @@ namespace Wasalnyy.PL.EventHandlers.Implementation
             if (receiverConnectionIds.Any())
             {
                 await _hubContext.Clients.Clients(receiverConnectionIds)
-                    .SendAsync("receivemessage", messageDto);
+     .SendAsync("receivemessage", messageDto, receiverId);
             }
         }
     }

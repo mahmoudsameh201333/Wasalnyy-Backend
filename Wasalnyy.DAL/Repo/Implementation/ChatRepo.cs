@@ -115,7 +115,11 @@ namespace Wasalnyy.DAL.Repo.Implementation
             return await _context.SaveChangesAsync(cancellationToken);
         }
 
-        
+        public async Task<int> GetUnreadCountFromUserAsync(string receiverId, string senderId)
+        {
+            return await _context.Messages
+                .CountAsync(m => m.ReceiverId == receiverId && m.SenderId == senderId && !m.IsRead);
+        }
 
         // Repository Layer - Add count method
         public async Task<int> GetConversationCountAsync(string userId1, string userId2)
@@ -126,7 +130,14 @@ namespace Wasalnyy.DAL.Repo.Implementation
                 .CountAsync();
         }
 
-
+        public async Task<IEnumerable<string>> GetChatParticipantsAsync(string userId)
+        {
+            return await _context.Messages
+                .Where(m => m.SenderId == userId || m.ReceiverId == userId)
+                .Select(m => m.SenderId == userId ? m.ReceiverId : m.SenderId)
+                .Distinct()
+                .ToListAsync();
+        }
         public async Task<int> GetUserMessagesCountAsync(string userId)
         {
             return await _context.Messages
