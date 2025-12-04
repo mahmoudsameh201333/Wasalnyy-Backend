@@ -5,10 +5,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Wasalnyy.BLL.Common;
 using Wasalnyy.BLL.EventHandlers.Abstraction;
+using Wasalnyy.BLL.Service.Implementation;
 using Wasalnyy.BLL.Settings;
 using Wasalnyy.DAL.Common;
 using Wasalnyy.DAL.Database;
 using Wasalnyy.DAL.Entities;
+using Wasalnyy.DAL.Helpers;
 using Wasalnyy.PL.EventHandlers.Implementation;
 using Wasalnyy.PL.Filters;
 using Wasalnyy.PL.Hubs;
@@ -97,6 +99,24 @@ namespace Wasalnyy.PL
                 var connectionService = services.GetRequiredService<IWasalnyyHubService>();
                 await connectionService.DeleteAllConnectionsAsync();
             }
+
+            //using (var scope = app.Services.CreateScope())
+            //{
+            //    var zoneService = scope.ServiceProvider.GetRequiredService<IZoneService>();
+
+            //    var topLeft = new Coordinates
+            //    {
+            //        Lat = 30.212202m,
+            //        Lng = 30.833817m
+            //    };
+            //    var bottomRight = new Coordinates
+            //    {
+            //        Lat = 29.760801m,
+            //        Lng = 31.885071m
+            //    };
+                
+            //    await ZonesSeeder.SeedZonesAsync(zoneService, topLeft, bottomRight);
+            //}
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())

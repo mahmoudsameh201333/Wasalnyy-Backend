@@ -17,7 +17,7 @@ namespace Wasalnyy.DAL.Repo.Implementation
 
         public async Task DeleteAsync(Guid id)
         {
-            var trip = await _context.Trips.SingleOrDefaultAsync(x => x.Id == id);
+            var trip = await _context.Trips.FirstOrDefaultAsync(x => x.Id == id);
 
             if (trip != null)
                 _context.Trips.Remove(trip);
@@ -75,7 +75,7 @@ namespace Wasalnyy.DAL.Repo.Implementation
                 .Include(x => x.Driver)
                 .Include(x => x.Rider)
                 .Include(x => x.Zone)
-                .SingleOrDefaultAsync(x => x.Id == id);
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             return x;
         }
@@ -117,12 +117,12 @@ namespace Wasalnyy.DAL.Repo.Implementation
 
         public async Task<Trip?> GetDriverActiveTripAsync(string driverId)
         {
-            return await _context.Trips.AsNoTracking().SingleOrDefaultAsync(x=> x.DriverId == driverId && (x.TripStatus == TripStatus.Started || x.TripStatus == TripStatus.Accepted));
+            return await _context.Trips.AsNoTracking().FirstOrDefaultAsync(x=> x.DriverId == driverId && (x.TripStatus == TripStatus.Started || x.TripStatus == TripStatus.Accepted));
         }
         public async Task<Trip?> GetRiderActiveTripAsync(string riderId)
         {
             return await _context.Trips.AsNoTracking()
-                .SingleOrDefaultAsync(x => x.RiderId == riderId && (x.TripStatus == TripStatus.Started || x.TripStatus == TripStatus.Accepted || x.TripStatus == TripStatus.Requested || x.TripStatus == TripStatus.Confirmed ));
+                .FirstOrDefaultAsync(x => x.RiderId == riderId && (x.TripStatus == TripStatus.Started || x.TripStatus == TripStatus.Accepted || x.TripStatus == TripStatus.Requested || x.TripStatus == TripStatus.Confirmed ));
         }
 
         public async Task<IEnumerable<Trip>> GetTripsByStatusAsync(TripStatus status)

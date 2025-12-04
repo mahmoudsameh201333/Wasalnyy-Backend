@@ -15,7 +15,7 @@
 
         public async Task DeleteAsync(Guid id)
         {
-            var zone = await _context.Zones.SingleOrDefaultAsync(x => x.Id == id);
+            var zone = await _context.Zones.FirstOrDefaultAsync(x => x.Id == id);
 
             if (zone != null)
             {
@@ -35,7 +35,7 @@
 
         public async Task<Zone?> GetByIdAsync(Guid id)
         {
-            return await _context.Zones.AsNoTracking().Include(x => x.Coordinates).SingleOrDefaultAsync(x => x.Id == id);
+            return await _context.Zones.AsNoTracking().Include(x => x.Coordinates).FirstOrDefaultAsync(x => x.Id == id);
         }
 
         public async Task UpdateAsync(Zone zone)
