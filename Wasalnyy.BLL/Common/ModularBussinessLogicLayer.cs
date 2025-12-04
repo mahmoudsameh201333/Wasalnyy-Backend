@@ -65,18 +65,18 @@ namespace Wasalnyy.BLL.Common
             services.AddScoped<PricingServiceValidator>();
             services.AddScoped<ZoneServiceValidator>();
             services.AddScoped<RouteServiceValidator>();
-
+            services.AddSingleton<IFaceService, FaceService>();
             //review complain
             services.AddScoped<IReviewService, ReviewService>();
             services.AddScoped<IComplaintService, ComplaintService>();
-            services.AddScoped<ReviewServiceValidator>();      
-            
+            services.AddScoped<ReviewServiceValidator>();
+			services.AddScoped<IFaceService, FaceService>();
 
 
-            services.AddSingleton<DriverEvents>();
+			services.AddSingleton<DriverEvents>();
             services.AddSingleton<TripEvents>();
             services.AddSingleton<WasalnyyHubEvents>();
-            services.AddSingleton<IFaceService, FaceService>();
+            
             //chat hub event
             services.AddSingleton<ChatHubEvent>();
 
