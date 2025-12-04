@@ -18,6 +18,7 @@ namespace Wasalnyy.BLL.Service.Implementation
 		private readonly IUserFaceDataRepo _faceRepo;
 		private readonly IWalletRepo _walletRepo;
 		private readonly IWalletService _walletService;
+		private readonly HttpClient _httpClient;
 		public AuthService(
 			UserManager<User> userManager,
 			JwtHandler jwtHandler,
@@ -26,7 +27,9 @@ namespace Wasalnyy.BLL.Service.Implementation
 			IConfiguration config,
 			IFaceService faceService,
 			IUserFaceDataRepo faceRepo,
-			IWalletRepo walletRepo, IWalletService walletService)
+			IWalletRepo walletRepo,
+			IWalletService walletService,
+			HttpClient httpClient)
 		{
 			_userManager = userManager;
 			_jwtHandler = jwtHandler;
@@ -36,7 +39,8 @@ namespace Wasalnyy.BLL.Service.Implementation
 			_faceRepo = faceRepo;
 			_walletRepo = walletRepo;
 			_faceService = faceService;
-			this._walletService = walletService;
+			_walletService = walletService;
+			_httpClient = httpClient;
 		}
 		public async Task<AuthResult> RegisterDriverAsync(RegisterDriverDto dto)
 		{
@@ -226,6 +230,8 @@ namespace Wasalnyy.BLL.Service.Implementation
 						Email = payload.Email,
 						FullName = payload.Name,
 						PhoneNumber = "",
+						ProviderId = payload.Subject,
+						Image = payload.Picture,
 						Provider = "Google",
 						CreatedAt = DateTime.UtcNow
 					};
@@ -252,6 +258,78 @@ namespace Wasalnyy.BLL.Service.Implementation
 			catch (Exception ex)
 			{
 				return new AuthResult { Success = false, Message = ex.Message };
+			}
+		}
+		public async Task<AuthResult> FacebookLoginAsync(FacebookLoginDto dto)
+		{
+			try
+			{
+				var facebookUser = await ValidateFacebookTokenAsync(dto.AccessToken);
+				if (facebookUser == null || string.IsNullOrEmpty(facebookUser.Email))
+					return new AuthResult { Success = false, Message = "Invalid Facebook token or email not provided" };
+				var user = await _userManager.FindByEmailAsync(facebookUser.Email);
+				if (user == null)
+				{
+					// Create new user
+					user = new Rider
+					{
+						UserName = facebookUser.Name.Replace(" ", "_").ToLower(),
+						Email = facebookUser.Email,
+						FullName = facebookUser.Name,
+						PhoneNumber = "",
+						Provider = "Facebook",
+						ProviderId = facebookUser.Id,
+						CreatedAt = DateTime.UtcNow
+					};
+					var createResult = await _userManager.CreateAsync(user);
+					if (!createResult.Succeeded)
+						return new AuthResult
+						{
+							Success = false,
+							Message = "Could not create user: " + string.Join(", ", createResult.Errors.Select(e => e.Description))
+						};
+					await _userManager.AddToRoleAsync(user, "Rider");
+					await _walletService.CreateWalletAsync(new CreateWalletDTO
+					{
+						Balance = 0,
+						UserId = user.Id,
+						CreatedAt = DateTime.Now,
+					});
+				}
+				if (user.IsSuspended)
+					return new AuthResult { Success = false, Message = "Your account is suspended." };
+
+				if (user.IsDeleted)
+					return new AuthResult { Success = false, Message = "Your account was deleted." };
+
+				var token = await _jwtHandler.GenerateToken(user);
+				return new AuthResult
+				{
+					Success = true,
+					Message = "Facebook login successful",
+					Token = token
+				};
+			}
+			catch (Exception ex)
+			{
+				return new AuthResult { Success = false, Message = ex.Message };
+			}
+		}
+
+		private async Task<FacebookUserInfoDto> ValidateFacebookTokenAsync(string accessToken)
+		{
+			try
+			{
+				var response = await _httpClient.GetAsync( $"https://graph.facebook.com/me?fields=id,name,email,picture.type(large)&access_token={accessToken}");
+				if (!response.IsSuccessStatusCode)
+					return null!;
+				var content = await response.Content.ReadAsStringAsync();
+				var userInfo = JsonSerializer.Deserialize<FacebookUserInfoDto>(content, new JsonSerializerOptions{ PropertyNameCaseInsensitive = true});
+				return userInfo!;
+			}
+			catch
+			{
+				return null!;
 			}
 		}
 		public async Task<AuthResult> RegisterDriverFaceAsync(string driverId, byte[] faceImage)

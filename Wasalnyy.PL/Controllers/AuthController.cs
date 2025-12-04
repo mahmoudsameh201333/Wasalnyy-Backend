@@ -35,6 +35,17 @@ namespace Wasalnyy.PL.Controllers
 			return Ok(result);
 		}
 
+		[HttpPost("facebook-login")]
+		public async Task<IActionResult> FacebookLogin([FromBody] FacebookLoginDto dto)
+		{
+			if (dto == null || string.IsNullOrEmpty(dto.AccessToken))
+				return BadRequest(new { Success = false, Message = "Invalid request" });
+			var result = await _authService.FacebookLoginAsync(dto);
+			if (!result.Success)
+				return BadRequest(result);
+			return Ok(result);
+		}
+
 		[HttpPost("register/driver")]
 		public async Task<IActionResult> RegisterDriver([FromBody] RegisterDriverDto dto)
 		{

@@ -65,12 +65,12 @@ namespace Wasalnyy.BLL.Common
             services.AddScoped<PricingServiceValidator>();
             services.AddScoped<ZoneServiceValidator>();
             services.AddScoped<RouteServiceValidator>();
-            services.AddSingleton<IFaceService, FaceService>();
+            
             //review complain
             services.AddScoped<IReviewService, ReviewService>();
             services.AddScoped<IComplaintService, ComplaintService>();
             services.AddScoped<ReviewServiceValidator>();
-			services.AddScoped<IFaceService, FaceService>();
+			
 
 
 			services.AddSingleton<DriverEvents>();
@@ -141,6 +141,7 @@ namespace Wasalnyy.BLL.Common
             services.AddScoped<JwtHandler>();
 			services.AddScoped<IAuthService, AuthService>();
 			services.AddScoped<IEmailService, EmailService>();
+			services.AddScoped<IFaceService, FaceService>();
 			return services;
         }
         public static IApplicationBuilder UseBussinessEventSubscriptions(this IApplicationBuilder app)
